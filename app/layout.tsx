@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "RunningGearDB — Gear Specs for Every Discipline",
   description: "Filterable running gear database: shoes, vests, gels. Trail, road, Hyrox, parkrun. Compare specs, read reviews, find your gear.",
   metadataBase: new URL("https://runninggeardb.com"),
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
