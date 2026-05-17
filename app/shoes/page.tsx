@@ -1,4 +1,5 @@
 import ProductTable from '@/components/product-table';
+import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -6,80 +7,30 @@ export const metadata: Metadata = {
   description: 'Filterable database of trail, road, and Hyrox running shoes. Compare specs, weights, drops, and prices.',
 };
 
-const mockShoes = [
-  {
-    id: '1',
-    brand: 'HOKA',
-    model: 'Speedgoat 6',
-    discipline: 'trail',
-    drop_mm: 7,
-    weight_g: 228,
-    price_usd: 145,
-    our_rating: 4.8,
-    carbon_plate: false,
-    amazon_url: 'https://amazon.com',
-  },
-  {
-    id: '2',
-    brand: 'Salomon',
-    model: 'Sense Ride 5',
-    discipline: 'trail',
-    drop_mm: 8,
-    weight_g: 240,
-    price_usd: 130,
-    our_rating: 4.6,
-    carbon_plate: false,
-    amazon_url: 'https://amazon.com',
-  },
-  {
-    id: '3',
-    brand: 'Brooks',
-    model: 'Cascadia 17',
-    discipline: 'trail',
-    drop_mm: 10,
-    weight_g: 248,
-    price_usd: 140,
-    our_rating: 4.5,
-    carbon_plate: false,
-    amazon_url: 'https://amazon.com',
-  },
-  {
-    id: '4',
-    brand: 'On',
-    model: 'Cloudmonster',
-    discipline: 'road',
-    drop_mm: 10.5,
-    weight_g: 264,
-    price_usd: 160,
-    our_rating: 4.7,
-    carbon_plate: true,
-    amazon_url: 'https://amazon.com',
-  },
-  {
-    id: '5',
-    brand: 'Nike',
-    model: 'Pegasus Trail 5',
-    discipline: 'trail',
-    drop_mm: 10,
-    weight_g: 244,
-    price_usd: 120,
-    our_rating: 4.4,
-    carbon_plate: false,
-    amazon_url: 'https://amazon.com',
-  },
-];
+export default async function ShoesPage() {
+  const { data: shoes } = await supabase
+    .from('shoes')
+    .select('*')
+    .eq('published', true)
+    .order('our_rating', { ascending: false });
 
-export default function ShoesPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-slate-950 mb-2">Running Shoes</h1>
-        <p className="text-lg text-slate-600">
-          Trail, road, Hyrox, parkrun. Filter by specs and find your perfect shoe.
-        </p>
-      </div>
+    <div className="w-full">
+      {/* Header with gradient background */}
+      <section className="relative py-16 bg-gradient-to-br from-orange-50 via-slate-50 to-white border-b border-orange-100">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-200/20 to-transparent rounded-full blur-3xl" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-5xl font-bold text-slate-950 mb-2">Running Shoes</h1>
+          <p className="text-lg text-slate-600 max-w-2xl">
+            Trail, road, Hyrox, parkrun. Filter by discipline, drop, weight, and more to find your perfect shoe.
+          </p>
+        </div>
+      </section>
 
-      <ProductTable products={mockShoes} category="shoes" />
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <ProductTable products={shoes || []} category="shoes" />
+      </div>
     </div>
   );
 }
