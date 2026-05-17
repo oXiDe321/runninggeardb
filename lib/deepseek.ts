@@ -15,7 +15,7 @@ export async function generateReview(
     .map((alt) => `- ${alt.brand} ${alt.model} (${alt.our_rating || 'N/A'}/5)`)
     .join('\n');
 
-  const prompt = `Write an 800-1200 word product review for runners in a minimal, data-driven style. Be honest about strengths and weaknesses.
+  const prompt = `Write an 800-1200 word product review for runners in a minimal, data-driven style. Cover strengths and weaknesses factually.
 
 Product: ${product.brand} ${product.model}
 Specs: ${specs}
@@ -33,7 +33,7 @@ Structure:
 7. Affiliate CTA: Suggest checking Amazon or brand site
 ${product.from_the_trail ? `8. From the Trail: "${product.from_the_trail}"` : ''}
 
-Keep language direct, avoid marketing jargon. Use the data to inform opinions, not replace them.`;
+Keep language direct and factual. Use the data to support conclusions.`;
 
   const response = await deepseek.chat.completions.create({
     model: 'deepseek-chat',

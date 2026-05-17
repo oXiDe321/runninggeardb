@@ -31,9 +31,26 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col bg-white text-slate-950">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('theme');
+                  if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
         <Nav />
         <main className="flex-1">{children}</main>
         <Footer />

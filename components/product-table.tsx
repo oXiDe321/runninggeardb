@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { LayoutGrid, List } from 'lucide-react';
+import ProductCard from './product-card';
 
 interface ProductTableProps {
   products: any[];
@@ -9,8 +10,11 @@ interface ProductTableProps {
   onFilter?: (filtered: any[]) => void;
 }
 
+const disciplineOptions = ['trail', 'road', 'hyrox', 'parkrun'];
+
 export default function ProductTable({ products, category, onFilter }: ProductTableProps) {
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [view, setView] = useState<'grid' | 'table'>('grid');
 
   const filtered = useMemo(() => {
     let result = products;
@@ -22,15 +26,9 @@ export default function ProductTable({ products, category, onFilter }: ProductTa
       if (filters.carbon) {
         result = result.filter((p) => p.carbon_plate);
       }
-      if (filters.maxPrice) {
-        result = result.filter((p) => !p.price_usd || p.price_usd <= filters.maxPrice);
-      }
     } else if (category === 'vests') {
       if (filters.utmb) {
         result = result.filter((p) => p.utmb_compliant);
-      }
-      if (filters.maxCapacity) {
-        result = result.filter((p) => !p.capacity_l || p.capacity_l <= filters.maxCapacity);
       }
     } else if (category === 'gels') {
       if (filters.caffeine) {
@@ -45,153 +43,190 @@ export default function ProductTable({ products, category, onFilter }: ProductTa
     return result;
   }, [products, filters, category, onFilter]);
 
-  const updateFilter = (key: string, value: any) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const toggleFilter = (key: string, value?: any) => {
+    setFilters((prev) => {
+      if (prev[key] === value) return { ...prev, [key]: undefined };
+      return { ...prev, [key]: value };
+    });
   };
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        {category === 'shoes' && (
-          <>
-            <select
-              value={filters.discipline || ''}
-              onChange={(e) => updateFilter('discipline', e.target.value || undefined)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+      {/* Filter bar + view toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex flex-wrap gap-2 flex-1">
+          {category === 'shoes' && (
+            <>
+              {disciplineOptions.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => toggleFilter('discipline', d)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium capitalize transition-all duration-150 ${
+                    filters.discipline === d
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+              <button
+                onClick={() => toggleFilter('carbon', true)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 ${
+                  filters.carbon
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                Carbon Plate
+              </button>
+            </>
+          )}
+          {category === 'vests' && (
+            <button
+              onClick={() => toggleFilter('utmb', true)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 ${
+                filters.utmb
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
             >
-              <option value="">All Disciplines</option>
-              <option value="trail">Trail</option>
-              <option value="road">Road</option>
-              <option value="hyrox">Hyrox</option>
-              <option value="parkrun">Parkrun</option>
-            </select>
-            <label className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm cursor-pointer hover:bg-slate-50">
-              <input
-                type="checkbox"
-                checked={filters.carbon || false}
-                onChange={(e) => updateFilter('carbon', e.target.checked || undefined)}
-              />
-              Carbon Plate
-            </label>
-            <input
-              type="number"
-              placeholder="Max Price"
-              value={filters.maxPrice || ''}
-              onChange={(e) => updateFilter('maxPrice', e.target.value ? parseInt(e.target.value) : undefined)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm w-32"
-            />
-          </>
-        )}
-        {category === 'vests' && (
-          <>
-            <label className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm cursor-pointer hover:bg-slate-50">
-              <input
-                type="checkbox"
-                checked={filters.utmb || false}
-                onChange={(e) => updateFilter('utmb', e.target.checked || undefined)}
-              />
               UTMB Compliant
-            </label>
-            <input
-              type="number"
-              placeholder="Max Capacity (L)"
-              value={filters.maxCapacity || ''}
-              onChange={(e) => updateFilter('maxCapacity', e.target.value ? parseInt(e.target.value) : undefined)}
-              className="px-3 py-2 border border-slate-200 rounded-lg text-sm w-40"
-            />
-          </>
-        )}
-        {category === 'gels' && (
-          <>
-            <label className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm cursor-pointer hover:bg-slate-50">
-              <input
-                type="checkbox"
-                checked={filters.caffeine || false}
-                onChange={(e) => updateFilter('caffeine', e.target.checked || undefined)}
-              />
-              Has Caffeine
-            </label>
-            <label className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm cursor-pointer hover:bg-slate-50">
-              <input
-                type="checkbox"
-                checked={filters.realFood || false}
-                onChange={(e) => updateFilter('realFood', e.target.checked || undefined)}
-              />
-              Real Food
-            </label>
-          </>
-        )}
+            </button>
+          )}
+          {category === 'gels' && (
+            <>
+              <button
+                onClick={() => toggleFilter('caffeine', true)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 ${
+                  filters.caffeine
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                Has Caffeine
+              </button>
+              <button
+                onClick={() => toggleFilter('realFood', true)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 ${
+                  filters.realFood
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                Real Food
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* View toggle */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+          <button
+            onClick={() => setView('grid')}
+            className={`p-2 rounded-md transition ${
+              view === 'grid'
+                ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+            aria-label="Grid view"
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setView('table')}
+            className={`p-2 rounded-md transition ${
+              view === 'table'
+                ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+            aria-label="Table view"
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="text-left py-3 px-4 font-semibold text-slate-950">Brand</th>
-              <th className="text-left py-3 px-4 font-semibold text-slate-950">Model</th>
-              {category === 'shoes' && (
-                <>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-950 font-mono">Drop</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-950 font-mono">Weight</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-950 font-mono">Price</th>
-                </>
-              )}
-              {category === 'vests' && (
-                <>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-950 font-mono">Capacity</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-950 font-mono">Price</th>
-                </>
-              )}
-              {category === 'gels' && (
-                <>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-950 font-mono">Carbs</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-950 font-mono">Price</th>
-                </>
-              )}
-              <th className="text-center py-3 px-4 font-semibold text-slate-950">Rating</th>
-              <th className="text-center py-3 px-4 font-semibold text-slate-950">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="text-center py-8 text-slate-600">
-                  No products found. Try adjusting filters.
-                </td>
+      {/* Content */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl">
+          <p className="text-slate-500 dark:text-slate-400 text-lg">No products found.</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Try adjusting filters.</p>
+        </div>
+      ) : view === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filtered.map((product, idx) => (
+            <ProductCard
+              key={product.id || idx}
+              product={product}
+              category={category}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50">
+                <th className="text-left py-3 px-4 font-semibold text-slate-950 dark:text-white">Brand</th>
+                <th className="text-left py-3 px-4 font-semibold text-slate-950 dark:text-white">Model</th>
+                {category === 'shoes' && (
+                  <>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-950 dark:text-white font-mono">Drop</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-950 dark:text-white font-mono">Weight</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-950 dark:text-white font-mono">Price</th>
+                  </>
+                )}
+                {category === 'vests' && (
+                  <>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-950 dark:text-white font-mono">Capacity</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-950 dark:text-white font-mono">Price</th>
+                  </>
+                )}
+                {category === 'gels' && (
+                  <>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-950 dark:text-white font-mono">Carbs</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-950 dark:text-white font-mono">Price</th>
+                  </>
+                )}
+                <th className="text-center py-3 px-4 font-semibold text-slate-950 dark:text-white">Rating</th>
+                <th className="text-center py-3 px-4 font-semibold text-slate-950 dark:text-white">Action</th>
               </tr>
-            ) : (
-              filtered.map((product, idx) => (
-                <tr key={product.id || idx} className="border-b border-slate-200 hover:bg-slate-50">
-                  <td className="py-3 px-4 font-medium text-slate-950">{product.brand}</td>
-                  <td className="py-3 px-4 text-slate-600">{product.model}</td>
+            </thead>
+            <tbody>
+              {filtered.map((product, idx) => (
+                <tr
+                  key={product.id || idx}
+                  className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                >
+                  <td className="py-3 px-4 font-medium text-slate-950 dark:text-white">{product.brand}</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{product.model || product.product}</td>
                   {category === 'shoes' && (
                     <>
-                      <td className="text-right py-3 px-4 font-mono text-slate-600">{product.drop_mm}mm</td>
-                      <td className="text-right py-3 px-4 font-mono text-slate-600">{product.weight_g}g</td>
-                      <td className="text-right py-3 px-4 font-mono text-slate-600">${product.price_usd}</td>
+                      <td className="text-right py-3 px-4 font-mono text-slate-600 dark:text-slate-400">{product.drop_mm}mm</td>
+                      <td className="text-right py-3 px-4 font-mono text-slate-600 dark:text-slate-400">{product.weight_g}g</td>
+                      <td className="text-right py-3 px-4 font-mono text-slate-600 dark:text-slate-400">${product.price_usd}</td>
                     </>
                   )}
                   {category === 'vests' && (
                     <>
-                      <td className="text-right py-3 px-4 font-mono text-slate-600">{product.capacity_l}L</td>
-                      <td className="text-right py-3 px-4 font-mono text-slate-600">${product.price_usd}</td>
+                      <td className="text-right py-3 px-4 font-mono text-slate-600 dark:text-slate-400">{product.capacity_l}L</td>
+                      <td className="text-right py-3 px-4 font-mono text-slate-600 dark:text-slate-400">${product.price_usd}</td>
                     </>
                   )}
                   {category === 'gels' && (
                     <>
-                      <td className="text-right py-3 px-4 font-mono text-slate-600">{product.carbs_per_serving_g}g</td>
-                      <td className="text-right py-3 px-4 font-mono text-slate-600">${product.price_per_serving}</td>
+                      <td className="text-right py-3 px-4 font-mono text-slate-600 dark:text-slate-400">{product.carbs_per_serving_g}g</td>
+                      <td className="text-right py-3 px-4 font-mono text-slate-600 dark:text-slate-400">${product.price_per_serving}</td>
                     </>
                   )}
                   <td className="text-center py-3 px-4">
                     {product.our_rating ? (
-                      <span className="inline-block px-2 py-1 bg-orange-100 text-orange-700 rounded text-sm font-semibold">
+                      <span className="inline-block px-2 py-1 bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 rounded text-sm font-semibold">
                         {product.our_rating}/5
                       </span>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-slate-400 dark:text-slate-600">—</span>
                     )}
                   </td>
                   <td className="text-center py-3 px-4">
@@ -200,22 +235,24 @@ export default function ProductTable({ products, category, onFilter }: ProductTa
                         href={product.amazon_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block px-3 py-1 bg-orange-600 text-white text-sm rounded-full hover:bg-orange-700 transition"
+                        className="inline-block px-3 py-1 bg-primary text-primary-foreground text-sm rounded-full hover:bg-brand-700 dark:hover:bg-brand-500 transition"
                       >
                         Buy
                       </a>
                     ) : (
-                      <span className="text-slate-400 text-sm">—</span>
+                      <span className="text-slate-400 dark:text-slate-600 text-sm">—</span>
                     )}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      <p className="text-xs text-slate-500">Showing {filtered.length} of {products.length} products</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Showing {filtered.length} of {products.length} products
+      </p>
     </div>
   );
 }

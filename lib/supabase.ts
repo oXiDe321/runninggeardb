@@ -36,6 +36,7 @@ export type Database = {
           published: boolean;
           affiliate_url: string | null;
           amazon_url: string | null;
+          image_url: string | null;
           created_at: string;
         };
       };
@@ -63,6 +64,7 @@ export type Database = {
           published: boolean;
           affiliate_url: string | null;
           amazon_url: string | null;
+          image_url: string | null;
           created_at: string;
         };
       };
@@ -87,6 +89,7 @@ export type Database = {
           published: boolean;
           affiliate_url: string | null;
           amazon_url: string | null;
+          image_url: string | null;
           created_at: string;
         };
       };
@@ -98,11 +101,9 @@ export type Database = {
           excerpt: string | null;
           content: string | null;
           category: 'guide' | 'comparison' | 'race' | 'nutrition' | null;
-          keywords: string[] | null;
           published: boolean;
           published_at: string | null;
           generated_at: string | null;
-          featured_image_url: string | null;
           created_at: string;
         };
       };
