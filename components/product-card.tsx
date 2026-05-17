@@ -34,18 +34,23 @@ export default function ProductCard({ product, category }: ProductCardProps) {
       <div className={`absolute top-0 left-0 right-0 h-1 ${accent.strip}`} />
 
       {/* Product image or silhouette */}
-      {imageUrl ? (
-        <div className="aspect-[4/3] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+      <div className="aspect-[4/3] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
+        {imageUrl ? (
           <img
             src={imageUrl}
             alt={`${brand} ${model}`}
             className="w-full h-full object-contain p-4"
             loading="lazy"
+            onError={(e) => {
+              // Hide broken image, show silhouette underneath
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
           />
+        ) : null}
+        <div className={imageUrl ? 'absolute inset-0' : ''}>
+          <ProductSilhouette category={category} />
         </div>
-      ) : (
-        <ProductSilhouette category={category} />
-      )}
+      </div>
 
       {/* Rating badge */}
       {rating && (

@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -14,72 +16,14 @@ const categoryStyles: Record<string, string> = {
 };
 
 function readingTime(content: string): number {
-  const words = content.split(/\s+/).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
-
-function parseMarkdown(content: string) {
-  const lines = content.split('\n');
-  const elements: React.ReactNode[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const key = `line-${i}`;
-
-    if (line.startsWith('## ')) {
-      elements.push(
-        <h2 key={key} className="text-2xl font-bold text-slate-950 dark:text-white mt-12 mb-4">
-          {line.replace(/^##\s+/, '')}
-        </h2>
-      );
-    } else if (line.startsWith('### ')) {
-      elements.push(
-        <h3 key={key} className="text-xl font-semibold text-slate-950 dark:text-white mt-8 mb-3">
-          {line.replace(/^###\s+/, '')}
-        </h3>
-      );
-    } else if (line.match(/^\*\*.*\|\s/)) {
-      const [namePart, ...restParts] = line.split('|');
-      const name = namePart.replace(/\*\*/g, '').trim();
-      const rest = restParts.join('|').trim();
-      elements.push(
-        <div key={key} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-white/10 my-4">
-          <p className="font-semibold text-slate-950 dark:text-white mb-1">{name}</p>
-          {rest && <p className="text-sm text-slate-600 dark:text-slate-400 font-mono">{rest}</p>}
-        </div>
-      );
-    } else if (line.startsWith('- ')) {
-      const items: string[] = [];
-      while (i < lines.length && lines[i].startsWith('- ')) {
-        items.push(lines[i].replace(/^-\s+/, ''));
-        i++;
-      }
-      i--;
-      elements.push(
-        <ul key={key} className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 mb-4">
-          {items.map((item, j) => (
-            <li key={`${key}-${j}`}>{item}</li>
-          ))}
-        </ul>
-      );
-    } else if (line.trim()) {
-      elements.push(
-        <p key={key} className="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed text-lg">
-          {line}
-        </p>
-      );
-    }
-  }
-
-  return elements;
+  return Math.max(1, Math.ceil(content.split(/\s+/).length / 200));
 }
 
 const mockPost = {
   title: 'Best Trail Running Shoes 2026',
   published_at: '2026-05-17',
   category: 'guide',
-  content: `
-## Introduction
+  content: `## Introduction
 
 Trail running shoe selection is more nuanced than road shoes. Terrain varies wildly—from smooth fireroads to ankle-breaking technical scree. This guide breaks down the best shoes for each scenario, based on real-world testing data.
 
@@ -106,18 +50,21 @@ Deeper lugs (5-6mm) grip better on loose terrain; shallower lugs (3-4mm) work on
 
 ## Best Shoes by Category
 
+| Shoe | Weight | Drop | Price | Best For |
+|------|--------|------|-------|----------|
+| HOKA Speedgoat 6 | 228g | 7mm | $145 | Technical terrain |
+| Salomon Sense Ride 5 | 240g | 8mm | $130 | Long ultras |
+| Nike Pegasus Trail 5 | 244g | 10mm | $120 | Budget all-arounder |
+
 ### Best for Technical Terrain: HOKA Speedgoat 6
-**Weight:** 228g | **Drop:** 7mm | **Price:** $145
 
 The Speedgoat 6 dominates steep, rocky terrain. Aggressive lugs grip confidently; lightweight design reduces fatigue on long descents.
 
 ### Best for Long Ultras: Salomon Sense Ride 5
-**Weight:** 240g | **Drop:** 8mm | **Price:** $130
 
 More cushioning than the Speedgoat, better for 30+ hour efforts where comfort is king.
 
 ### Best Value: Nike Pegasus Trail 5
-**Weight:** 244g | **Drop:** 10mm | **Price:** $120
 
 Solid all-around shoe at an accessible price. Less aggressive than competitors, but reliable.
 
@@ -125,7 +72,7 @@ Solid all-around shoe at an accessible price. Less aggressive than competitors, 
 
 Choose based on your primary terrain and race distance. Rocky, steep terrain? Speedgoat. Long ultras on mixed terrain? Sense Ride. Budget-conscious? Pegasus Trail.
 
-Compare full specs in our shoes database to find your match.
+Compare full specs in our [shoes database](/shoes) to find your match.
   `,
 };
 
@@ -156,7 +103,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     .single();
 
   const post = dbPost || { ...mockPost, slug };
-  const category = post.category || 'guide';
+  const category = (post.category as string) || 'guide';
   const readMin = readingTime(post.content || '');
 
   return (
@@ -164,7 +111,7 @@ export default async function BlogPostPage({ params }: PageProps) {
       {/* Header */}
       <section className="relative py-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b border-white/10">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-brand-500/10 to-purple-500/10 rounded-full blur-3xl" />
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-4">
             <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${categoryStyles[category] || categoryStyles.guide}`}>
               {category}
@@ -172,15 +119,13 @@ export default async function BlogPostPage({ params }: PageProps) {
             {post.published_at && (
               <time className="text-sm text-slate-400">
                 {new Date(post.published_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
+                  year: 'numeric', month: 'long', day: 'numeric',
                 })}
               </time>
             )}
             <span className="text-sm text-slate-500">{readMin} min read</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
             {post.title}
           </h1>
           {post.excerpt && (
@@ -191,43 +136,48 @@ export default async function BlogPostPage({ params }: PageProps) {
 
       {/* Article body */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <article>
-          <div className="prose-custom">
-            {post.content ? (
-              parseMarkdown(post.content)
-            ) : (
-              <p className="text-slate-500 dark:text-slate-400 text-center py-8">
-                No content available.
-              </p>
-            )}
-          </div>
-
-          <footer className="border-t border-slate-200 dark:border-white/10 pt-8 mt-16">
-            <h3 className="text-lg font-semibold text-slate-950 dark:text-white mb-4">
-              Ready to find your gear?
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/shoes"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-full font-medium text-sm hover:bg-brand-700 dark:hover:bg-brand-500 transition-colors"
-              >
-                Browse Shoes
-              </Link>
-              <Link
-                href="/vests"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full font-medium text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              >
-                Browse Vests
-              </Link>
-              <Link
-                href="/gels"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full font-medium text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              >
-                Browse Nutrition
-              </Link>
-            </div>
-          </footer>
+        <article className="prose prose-slate dark:prose-invert max-w-none
+          prose-headings:font-bold prose-headings:text-slate-950 dark:prose-headings:text-white
+          prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
+          prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+          prose-p:text-lg prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4
+          prose-li:text-slate-600 dark:prose-li:text-slate-300
+          prose-a:text-brand-600 dark:prose-a:text-brand-400 prose-a:no-underline hover:prose-a:underline
+          prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-semibold
+          prose-table:rounded-xl prose-table:overflow-hidden
+          prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-2 prose-th:text-sm prose-th:font-semibold
+          prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-td:border-b prose-td:border-slate-100 dark:prose-td:border-white/5
+          prose-thead:border-b prose-thead:border-slate-200 dark:prose-thead:border-white/10
+          prose-code:bg-slate-100 dark:prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+          prose-blockquote:border-l-brand-500 prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-800/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
+        ">
+          {post.content ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {post.content}
+            </ReactMarkdown>
+          ) : (
+            <p className="text-slate-500 dark:text-slate-400 text-center py-8">
+              No content available.
+            </p>
+          )}
         </article>
+
+        <footer className="border-t border-slate-200 dark:border-white/10 pt-8 mt-16">
+          <h3 className="text-lg font-semibold text-slate-950 dark:text-white mb-4">
+            Compare specs yourself
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/shoes" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-full font-medium text-sm hover:bg-brand-700 dark:hover:bg-brand-500 transition-colors">
+              Browse Shoes
+            </Link>
+            <Link href="/vests" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full font-medium text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+              Browse Vests
+            </Link>
+            <Link href="/gels" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full font-medium text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+              Browse Nutrition
+            </Link>
+          </div>
+        </footer>
 
         {/* JSON-LD structured data */}
         <script
@@ -238,10 +188,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               '@type': 'BlogPosting',
               headline: post.title,
               datePublished: post.published_at,
-              author: {
-                '@type': 'Organization',
-                name: 'RunningGearDB',
-              },
+              author: { '@type': 'Organization', name: 'RunningGearDB' },
               articleBody: (post.content || '').substring(0, 500),
             }),
           }}

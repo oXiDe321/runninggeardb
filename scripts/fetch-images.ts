@@ -1,6 +1,6 @@
 /**
- * Fetches product images from manufacturer websites and Amazon.
- * Tries multiple sources for each product, saves the first working image.
+ * Fetches real product images from Amazon search results.
+ * Extracts m.media-amazon.com image URLs for each product.
  * Usage: npx tsx scripts/fetch-images.ts
  */
 
@@ -10,128 +10,86 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const TAG = 'trailgear-22';
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } },
+);
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } });
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
-const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
-
-async function urlExists(url: string): Promise<boolean> {
-  try {
-    const res = await fetch(url, { method: 'HEAD', headers: { 'User-Agent': UA } });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-// Known-good manufacturer image URL builders
-async function findImage(brand: string, model: string): Promise<string | null> {
-  const sources: string[] = [];
-
-  // Try Amazon search result images (most reliable for affiliate sites)
-  const amzQuery = encodeURIComponent(`${brand} ${model}`);
-  sources.push(
-    `https://www.amazon.com.au/s?k=${amzQuery}&tag=${TAG}`,
-  );
-
-  // Amazon direct image CDN (works when we know the image hash)
-  // We'll try to extract from HTML
+async function fetchAmazonImage(searchTerm: string): Promise<string | null> {
+  const url = `https://www.amazon.com/s?k=${encodeURIComponent(searchTerm)}`;
 
   try {
-    const res = await fetch(sources[0], {
-      headers: { 'User-Agent': UA, 'Accept': 'text/html' },
+    const res = await fetch(url, {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html', 'Accept-Language': 'en-US,en;q=0.9' },
+      signal: AbortSignal.timeout(8000),
     });
+
     const html = await res.text();
 
-    // Extract first product image from search results
-    const imgMatch = html.match(/src="(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+\.(?:jpg|png|jpeg))"/i);
-    if (imgMatch) return imgMatch[1];
-
-    // Try data-old-hires variant
+    // Strategy 1: Extract from data-old-hires (highest quality image)
     const hiresMatch = html.match(/data-old-hires="(https:\/\/[^"]+)"/);
     if (hiresMatch) return hiresMatch[1];
-  } catch {
-    // Continue to fallback URLs
+
+    // Strategy 2: Extract src from img with data-asin parent
+    const srcs = [...html.matchAll(/<img[^>]+src="(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+\.(?:jpg|png|jpeg))"/gi)];
+    if (srcs.length > 0) return srcs[0][1];
+
+    // Strategy 3: Any m.media-amazon.com image
+    const anyMedia = html.match(/https:\/\/m\.media-amazon\.com\/images\/I\/[^"\s]+\.(?:jpg|png|jpeg)/);
+    if (anyMedia) return anyMedia[0];
+
+    return null;
+  } catch (err) {
+    return null;
   }
-
-  // Manufacturer-specific fallback URLs
-  const lc = (s: string) => s.toLowerCase().replace(/\s+/g, '-');
-  const fallbacks: Record<string, string[]> = {
-    'HOKA': [`https://www.hoka.com/content/dam/hoka/products/men/m-${lc(model)}/product-1.jpg`],
-    'Nike': [`https://static.nike.com/a/images/t_PDP_864_v1/f_auto,b_rgb:f5f5f5/${lc(model)}.jpg`],
-    'Salomon': [`https://www.salomon.com/sites/default/files/styles/product_full/public/products/${lc(model)}.jpg`],
-    'Brooks': [`https://www.brooksrunning.com/dw/image/v2/BGPF_PRD/on/demandware.static/-/Sites-brooks-master/default/${lc(model)}.jpg`],
-    'ASICS': [`https://images.asics.com/is/image/asics/${lc(model)}?$sfcc-product$`],
-    'Saucony': [`https://www.saucony.com/on/demandware.static/-/Sites-saucony_us-Library/default/${lc(model)}.jpg`],
-    'On': [`https://www.on-running.com/dw/image/v2/BBLL_PRD/on/demandware.static/-/Sites-ON/default/${lc(model)}.jpg`],
-    'Altra': [`https://www.altrarunning.com/dw/image/v2/BBLL_PRD/on/demandware.static/-/Sites-ON/default/${lc(model)}.jpg`],
-    'Adidas': [`https://assets.adidas.com/images/w_600,f_auto,q_auto/${lc(model)}.jpg`],
-    'New Balance': [`https://nb.scene7.com/is/image/NB/${lc(model)}`],
-  };
-
-  const brandUrls = fallbacks[brand] || [];
-  for (const url of brandUrls) {
-    if (await urlExists(url)) return url;
-  }
-
-  return null;
 }
 
 async function main() {
-  console.log('Fetching product images...\n');
+  console.log('Fetching real product images from Amazon...\n');
 
   const tables = ['shoes', 'vests', 'gels'] as const;
 
   for (const table of tables) {
     const { data: products } = await supabase
       .from(table)
-      .select('*')
+      .select('id, brand, model, product')
       .eq('published', true);
 
     if (!products?.length) continue;
 
-    console.log(`${table} (${products.length} products):`);
-    let found = 0;
+    console.log(`${table} (${products.length}):`);
     let updated = 0;
 
-    for (const product of products) {
-      // Skip if already has an image
-      if (product.image_url) {
-        found++;
-        continue;
-      }
+    for (const p of products) {
+      const name = p.model || p.product;
+      const search = `${p.brand} ${name}`;
+      process.stdout.write(`  ${search}... `);
 
-      const name = product.model || product.product;
-      const keywords = `${product.brand} ${name}`;
-      process.stdout.write(`  ${keywords}... `);
-
-      const imageUrl = await findImage(product.brand, name);
-
-      if (imageUrl) {
+      const img = await fetchAmazonImage(search);
+      if (img) {
         const { error } = await supabase
           .from(table)
-          .update({ image_url: imageUrl })
-          .eq('id', product.id);
+          .update({ image_url: img })
+          .eq('id', p.id);
 
         if (error) {
-          console.log(`save failed: ${error.message}`);
+          console.log(`save error: ${error.message}`);
         } else {
-          console.log(`✓ ${imageUrl.substring(0, 60)}...`);
+          console.log(`✓ ${img.substring(0, 55)}...`);
           updated++;
-          found++;
         }
       } else {
-        console.log('✗ not found');
+        console.log('✗');
       }
 
-      // Rate limit
-      await new Promise((r) => setTimeout(r, 800));
+      // Rate limit — be polite to Amazon
+      await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800));
     }
 
-    console.log(`  → ${updated} new, ${found} total with images\n`);
+    console.log(`  → ${updated} updated\n`);
   }
 
   console.log('Done.');
