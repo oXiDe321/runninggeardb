@@ -7,7 +7,7 @@ export default function Logo() {
         <Footprints className="w-5 h-5 text-white" />
       </div>
       <span className="font-bold text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-        RunningGearDB
+        Running Gear Database
       </span>
     </div>
   );
