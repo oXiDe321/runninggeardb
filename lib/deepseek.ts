@@ -35,13 +35,13 @@ ${product.from_the_trail ? `8. From the Trail: "${product.from_the_trail}"` : ''
 
 Keep language direct, avoid marketing jargon. Use the data to inform opinions, not replace them.`;
 
-  const message = await deepseek.messages.create({
+  const response = await deepseek.chat.completions.create({
     model: 'deepseek-chat',
     max_tokens: 1500,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  return message.content[0].type === 'text' ? message.content[0].text : '';
+  return response.choices[0].message.content || '';
 }
 
 export async function generateBlogPost(
@@ -67,13 +67,13 @@ Requirements:
 
 Write in a conversational but authoritative tone. A runner should feel like an expert is giving them practical advice.`;
 
-  const message = await deepseek.messages.create({
+  const response = await deepseek.chat.completions.create({
     model: 'deepseek-chat',
     max_tokens: 2000,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  return message.content[0].type === 'text' ? message.content[0].text : '';
+  return response.choices[0].message.content || '';
 }
 
 function formatSpecs(table: string, product: any): string {
