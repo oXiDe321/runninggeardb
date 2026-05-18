@@ -1,14 +1,14 @@
 // app/page.tsx — Specs-Engine homepage.
-// Server component: live SKU counts, top-of-index table, category cards,
-// changelog feed pulled from the public changelog table.
+// Server component: live SKU counts, top-12 table, category cards,
+// changelog feed + recent price changes.
 
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-export const revalidate = 300; // 5 min — index is "live-ish" without being expensive
+export const revalidate = 300;
 
 async function loadHome() {
-  const [shoesRes, vestsRes, gelsRes, topRes, changelogRes] = await Promise.all([
+  const [shoesRes, vestsRes, gelsRes, topRes, changelogRes, priceLogRes] = await Promise.all([
     supabase.from('shoes').select('id, weight_g, drop_mm, stack_heel_mm, price_usd', { count: 'exact' }).eq('published', true),
     supabase.from('vests').select('id, capacity_l, weight_g, price_usd', { count: 'exact' }).eq('published', true),
     supabase.from('gels').select('id, carbs_per_serving_g, caffeine_mg, price_per_serving', { count: 'exact' }).eq('published', true),
@@ -17,15 +17,20 @@ async function loadHome() {
       .select('id, slug, brand, model, image_url, our_rating, weight_g, drop_mm, stack_heel_mm, price_usd, discipline, carbon_plate, tagline')
       .eq('published', true)
       .order('our_rating', { ascending: false })
-      .limit(6),
+      .limit(12),
     supabase
       .from('changelog')
       .select('id, occurred_at, kind, summary')
       .order('occurred_at', { ascending: false })
       .limit(6),
+    supabase
+      .from('changelog')
+      .select('id, occurred_at, kind, summary')
+      .eq('kind', 'price')
+      .order('occurred_at', { ascending: false })
+      .limit(5),
   ]);
 
-  // Numeric ranges for category cards
   const shoesData = shoesRes.data ?? [];
   const vestsData = vestsRes.data ?? [];
   const gelsData  = gelsRes.data  ?? [];
@@ -70,6 +75,7 @@ async function loadHome() {
     gelStats,
     top: topRes.data ?? [],
     changelog: changelogRes.data ?? [],
+    priceLog: priceLogRes.data ?? [],
     avgPrice,
   };
 }
@@ -146,7 +152,7 @@ export default async function HomePage() {
               ['Reviews live', `${d.totalCount} / ${d.totalCount}`, '100% coverage'],
               ['Avg price', `$${d.avgPrice}`, 'shoes + vests'],
               ['Categories', '3', 'shoes · vests · fuel'],
-              ['Editorial standards', 'Published', 'methodology v4.2'],
+              ['Editorial standards', 'Published', 'all data sourced from manufacturers'],
             ].map(([l, v, d2], i, arr) => (
               <div
                 key={l}
@@ -169,13 +175,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── THE INDEX (top-rated table) ──────────────────────────── */}
+      {/* ── THE INDEX (top-12) ──────────────────────────────────── */}
       <section className="border-b border-rule px-8 py-12">
         <div className="mx-auto max-w-7xl">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
-                · the index · top-rated · sorted_by · rating ↓
+                · the index · top-12 · sorted_by · rating ↓
               </span>
               <h2 className="m-0 mt-2 font-display text-[48px] font-semibold tracking-[-0.03em]">
                 Browse like a database.
@@ -191,19 +197,19 @@ export default async function HomePage() {
 
           <div className="overflow-hidden rounded-[6px] border border-rule bg-paper">
             <div className="grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
-              <span>#</span><span></span><span>brand / model</span>
+              <span>#</span><span /><span>brand / model</span>
               <span className="text-right">drop</span>
               <span className="text-right">wt</span>
               <span className="text-right">stack</span>
               <span className="text-right">$</span>
               <span className="text-right">score ↓</span>
-              <span className="text-right"></span>
+              <span className="text-right" />
             </div>
             {d.top.map((s: any, i: number) => (
               <Link
                 key={s.id}
                 href={`/reviews/${s.slug}`}
-                className={`grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] items-center border-b border-rule-soft px-4 py-3.5 ${
+                className={`grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] items-center border-b border-rule-soft px-4 py-3.5 last:border-0 ${
                   i === 0 ? 'bg-rust/[0.05]' : ''
                 }`}
               >
@@ -300,45 +306,78 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CHANGELOG ───────────────────────────────────────────── */}
+      {/* ── RECENT PRICE CHANGES + CHANGELOG ────────────────────── */}
       <section className="border-b border-rule px-8 py-12">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 lg:grid-cols-[320px_1fr]">
-          <div>
-            <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
-              · /changelog ·
-            </span>
-            <h2 className="m-0 mt-2 mb-3 font-display text-[44px] font-semibold tracking-[-0.03em]">
-              Kept current.
-            </h2>
-            <p className="m-0 max-w-[460px] font-mono text-[13px] leading-[1.6] text-ink-70">
-              Every entry, edit, re-score and price-check is logged. Public, timestamped, and
-              reversible. No silent updates, no surprise nerfs.
-            </p>
-            <Link href="/changelog" className="mt-4 inline-block font-mono text-[11.5px] text-rust">
-              open the full log →
-            </Link>
-          </div>
-          <div className="rounded-[6px] border border-rule bg-paper p-4 font-mono text-[12.5px] leading-[1.7]">
-            {d.changelog.length > 0 ? (
-              d.changelog.map((e: any, i: number) => (
-                <div
-                  key={e.id}
-                  className={`grid grid-cols-[140px_60px_1fr] items-center gap-3 py-1.5 ${
-                    i < d.changelog.length - 1 ? 'border-b border-rule-soft' : ''
-                  }`}
-                >
-                  <span className="text-ink-50">{formatShort(e.occurred_at)}</span>
-                  <span style={{ color: kindColor[e.kind] }} className="font-semibold">
-                    {kindLabel[e.kind] ?? e.kind.toUpperCase()}
-                  </span>
-                  <span>{e.summary}</span>
-                </div>
-              ))
-            ) : (
-              <span className="text-ink-50">
-                · changelog is empty — run an /add or wait for the cron sync ·
+        <div className="mx-auto max-w-7xl space-y-12">
+          {/* Price changes */}
+          {d.priceLog.length > 0 && (
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
+              <div>
+                <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ochre">
+                  · recent price changes ·
+                </span>
+                <h2 className="m-0 mt-2 font-display text-[36px] font-semibold tracking-[-0.03em]">
+                  Prices moving.
+                </h2>
+                <Link href="/prices" className="mt-2 inline-block font-mono text-[11.5px] text-rust">
+                  view all prices →
+                </Link>
+              </div>
+              <div className="rounded-[6px] border border-rule bg-paper p-4 font-mono text-[12.5px]">
+                {d.priceLog.map((e: any, i: number) => (
+                  <div
+                    key={e.id}
+                    className={`grid grid-cols-[140px_1fr] items-center gap-3 py-2 ${
+                      i < d.priceLog.length - 1 ? 'border-b border-rule-soft' : ''
+                    }`}
+                  >
+                    <span className="text-ink-50">{formatShort(e.occurred_at)}</span>
+                    <span>{e.summary}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Changelog */}
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
+            <div>
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
+                · /changelog ·
               </span>
-            )}
+              <h2 className="m-0 mt-2 mb-3 font-display text-[36px] font-semibold tracking-[-0.03em]">
+                Kept current.
+              </h2>
+              <p className="m-0 max-w-[460px] font-mono text-[13px] leading-[1.6] text-ink-70">
+                Every entry, edit, re-score and price-check is logged. Public, timestamped, and
+                reversible.
+              </p>
+              <Link href="/changelog" className="mt-4 inline-block font-mono text-[11.5px] text-rust">
+                open the full log →
+              </Link>
+            </div>
+            <div className="rounded-[6px] border border-rule bg-paper p-4 font-mono text-[12.5px] leading-[1.7]">
+              {d.changelog.length > 0 ? (
+                d.changelog.map((e: any, i: number) => (
+                  <div
+                    key={e.id}
+                    className={`grid grid-cols-[140px_60px_1fr] items-center gap-3 py-1.5 ${
+                      i < d.changelog.length - 1 ? 'border-b border-rule-soft' : ''
+                    }`}
+                  >
+                    <span className="text-ink-50">{formatShort(e.occurred_at)}</span>
+                    <span style={{ color: kindColor[e.kind] }} className="font-semibold">
+                      {kindLabel[e.kind] ?? e.kind.toUpperCase()}
+                    </span>
+                    <span>{e.summary}</span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-ink-50">
+                  · changelog is empty — run an /add or wait for the cron sync ·
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </section>

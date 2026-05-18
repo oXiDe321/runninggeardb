@@ -1,11 +1,41 @@
 'use client';
 // components/product-table.tsx — dense data-engine table with filter chips,
-// range sliders, sort, and grid/table view toggle.
+// range sliders, sort, and grid/table view toggle. Single unified table
+// driven by SPEC_COLUMNS config.
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
 
 type Category = 'shoes' | 'vests' | 'gels';
 type Product = Record<string, any>;
+
+interface ColDef {
+  key: string;
+  label: string;
+  width: string;
+  unit?: string;
+}
+
+const SPEC_COLUMNS: Record<Category, ColDef[]> = {
+  shoes: [
+    { key: 'drop_mm', label: 'drop', width: '60px', unit: 'mm' },
+    { key: 'weight_g', label: 'wt', width: '70px', unit: 'g' },
+    { key: 'stack_heel_mm', label: 'stack', width: '70px', unit: 'mm' },
+    { key: 'price_usd', label: '$', width: '70px' },
+  ],
+  vests: [
+    { key: 'capacity_l', label: 'capacity', width: '80px', unit: 'L' },
+    { key: 'weight_g', label: 'wt', width: '70px', unit: 'g' },
+    { key: 'price_usd', label: '$', width: '70px' },
+  ],
+  gels: [
+    { key: 'carbs_per_serving_g', label: 'carbs', width: '70px', unit: 'g' },
+    { key: 'sodium_mg', label: 'sodium', width: '70px', unit: 'mg' },
+    { key: 'caffeine_mg', label: 'caffeine', width: '70px', unit: 'mg' },
+    { key: 'price_per_serving', label: '$/srv', width: '80px' },
+  ],
+};
 
 export default function ProductTable({
   products,
@@ -41,6 +71,15 @@ export default function ProductTable({
 
   const toggle = (k: string, v?: any) =>
     setFilters((p) => ({ ...p, [k]: p[k] === v ? undefined : v }));
+
+  const cols = SPEC_COLUMNS[category];
+  const sortKeys = [
+    { key: 'our_rating', label: 'rating' },
+    { key: 'price_usd', label: 'price' },
+    ...(category === 'shoes'
+      ? [{ key: 'weight_g', label: 'weight' }, { key: 'drop_mm', label: 'drop' }]
+      : []),
+  ];
 
   return (
     <div className="space-y-5">
@@ -96,12 +135,10 @@ export default function ProductTable({
             }}
             className="rounded-[3px] border border-rule bg-sand px-2 py-1 font-mono text-[11.5px]"
           >
-            <option value="our_rating:desc">rating ↓</option>
-            <option value="our_rating:asc">rating ↑</option>
-            <option value="price_usd:asc">price ↑</option>
-            <option value="price_usd:desc">price ↓</option>
-            {category === 'shoes' && <option value="weight_g:asc">weight ↑</option>}
-            {category === 'shoes' && <option value="drop_mm:asc">drop ↑</option>}
+            {sortKeys.flatMap((sk) => [
+              <option key={`${sk.key}:desc`} value={`${sk.key}:desc`}>{sk.label} ↓</option>,
+              <option key={`${sk.key}:asc`} value={`${sk.key}:asc`}>{sk.label} ↑</option>,
+            ])}
           </select>
           <div className="ml-2 flex items-center gap-1 rounded border border-rule bg-sand p-0.5">
             <button
@@ -133,9 +170,13 @@ export default function ProductTable({
       {/* Table view */}
       {view === 'table' ? (
         <div className="overflow-x-auto rounded border border-rule bg-paper">
-          {category === 'shoes' && <ShoeTable rows={filtered} sort={sort} setSort={setSort} />}
-          {category === 'vests' && <VestTable rows={filtered} sort={sort} setSort={setSort} />}
-          {category === 'gels' && <GelTable rows={filtered} sort={sort} setSort={setSort} />}
+          <UnifiedTable
+            rows={filtered}
+            category={category}
+            cols={cols}
+            sort={sort}
+            setSort={setSort}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -148,7 +189,118 @@ export default function ProductTable({
   );
 }
 
+// ── Unified table ──────────────────────────────────────────────────
+
+function UnifiedTable({
+  rows,
+  category,
+  cols,
+  sort,
+  setSort,
+}: {
+  rows: Product[];
+  category: Category;
+  cols: ColDef[];
+  sort: { key: string; dir: 'asc' | 'desc' };
+  setSort: (s: { key: string; dir: 'asc' | 'desc' }) => void;
+}) {
+  const colWidths = cols.map((c) => c.width).join(' ');
+  const gridCols = `40px 60px 2fr ${colWidths} 90px 130px`;
+
+  return (
+    <>
+      {/* Header */}
+      <div
+        className="grid items-center gap-3 border-b border-rule bg-sand-deep px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50"
+        style={{ gridTemplateColumns: gridCols }}
+      >
+        <span>#</span>
+        <span />
+        <TH k={category === 'gels' ? 'product' : 'model'} sort={sort} setSort={setSort}>
+          brand / {category === 'gels' ? 'product' : 'model'}
+        </TH>
+        {cols.map((c) => (
+          <TH key={c.key} k={c.key} align="right" sort={sort} setSort={setSort}>
+            {c.label}
+          </TH>
+        ))}
+        <TH k="our_rating" align="right" sort={sort} setSort={setSort}>
+          score
+        </TH>
+        <span className="text-right">buy</span>
+      </div>
+
+      {/* Rows */}
+      {rows.map((p, i) => {
+        const modelName = category === 'gels' ? p.product : p.model;
+        const buyPrice = category === 'gels' ? '' : ` · $${p.price_usd}`;
+        const buyHref = p.amazon_url && p.amazon_url !== 'https://amazon.com'
+          ? affiliateUrl(p.amazon_url)
+          : amazonSearchUrl(p.brand, modelName);
+        return (
+          <Link
+            key={p.id ?? i}
+            href={category === 'shoes' ? `/reviews/${p.slug}` : `/${category === 'vests' ? 'vests' : 'gels'}?highlight=${p.slug}`}
+            className="grid items-center gap-3 border-b border-rule-soft px-4 py-3 no-underline"
+            style={{
+              gridTemplateColumns: gridCols,
+              backgroundColor: i % 2 ? 'var(--color-sand-deep, #d9d3c1) / 0.4' : undefined,
+            }}
+          >
+            <span className="font-mono text-[12px] text-ink-50">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <div className="h-12 w-12 overflow-hidden rounded-[3px] bg-sand-deep">
+              {p.image_url && (
+                <img src={p.image_url} alt={modelName} className="h-full w-full object-cover" />
+              )}
+            </div>
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">
+                {p.brand?.toUpperCase()}
+                {category === 'shoes' && p.carbon_plate && ' · ◆ CARBON'}
+                {category === 'vests' && p.utmb_compliant && ' · UTMB'}
+                {category === 'gels' && p.real_food && ' · REAL FOOD'}
+              </div>
+              <div className="font-display text-[17px] font-medium tracking-[-0.015em] text-carbon">
+                {modelName}
+              </div>
+              {category === 'shoes' && (
+                <div className="mt-0.5 font-mono text-[10.5px] text-ink-50">
+                  · {p.discipline}
+                  {p.tagline ? ` · ${p.tagline}` : ''}
+                </div>
+              )}
+            </div>
+            {cols.map((c) => (
+              <span key={c.key} className="text-right font-mono text-[13px]">
+                {c.unit && c.key === 'price_usd' ? `$${p[c.key]}` : p[c.key] ?? '—'}
+                {c.unit && c.key !== 'price_usd' && c.key !== 'price_per_serving' && (
+                  <span className="text-ink-50">{c.unit}</span>
+                )}
+              </span>
+            ))}
+            <div className="flex justify-end">
+              <ScoreCircle score={Number(p.our_rating ?? 0)} />
+            </div>
+            <span
+              className="rounded-[3px] bg-carbon py-2 text-center font-mono text-[11px] font-medium text-sand"
+              onClick={(e) => {
+                e.preventDefault();
+                window.open(buyHref, '_blank', 'noopener');
+              }}
+            >
+              BUY{buyPrice} →
+            </span>
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 // ── small helpers ─────────────────────────────────────────────────
+
 function Chip({
   active,
   onClick,
@@ -169,9 +321,11 @@ function Chip({
     </button>
   );
 }
+
 function Sep() {
   return <span className="h-5 w-px bg-rule" />;
 }
+
 function TH({
   k,
   align,
@@ -199,161 +353,8 @@ function TH({
   );
 }
 
-// ── table variants ────────────────────────────────────────────────
-function ShoeTable({
-  rows,
-  sort,
-  setSort,
-}: {
-  rows: Product[];
-  sort: { key: string; dir: 'asc' | 'desc' };
-  setSort: (s: { key: string; dir: 'asc' | 'desc' }) => void;
-}) {
-  return (
-    <>
-      <div className="grid grid-cols-[40px_60px_2fr_60px_70px_70px_70px_90px_130px] items-center gap-3 border-b border-rule bg-sand-deep px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
-        <span>#</span>
-        <span></span>
-        <TH k="model" sort={sort} setSort={setSort}>brand / model</TH>
-        <TH k="drop_mm" align="right" sort={sort} setSort={setSort}>drop</TH>
-        <TH k="weight_g" align="right" sort={sort} setSort={setSort}>wt</TH>
-        <TH k="stack_heel_mm" align="right" sort={sort} setSort={setSort}>stack</TH>
-        <TH k="price_usd" align="right" sort={sort} setSort={setSort}>$</TH>
-        <TH k="our_rating" align="right" sort={sort} setSort={setSort}>score</TH>
-        <span className="text-right">buy</span>
-      </div>
-      {rows.map((s, i) => (
-        <a
-          key={s.id ?? i}
-          href={`/reviews/${s.slug}`}
-          className={`grid grid-cols-[40px_60px_2fr_60px_70px_70px_70px_90px_130px] items-center gap-3 border-b border-rule-soft px-4 py-3 ${
-            i % 2 ? 'bg-sand-deep/40' : ''
-          }`}
-        >
-          <span className="font-mono text-[12px] text-ink-50">
-            {String(i + 1).padStart(2, '0')}
-          </span>
-          <div className="h-12 w-12 overflow-hidden rounded-[3px] bg-sand-deep">
-            {s.image_url && (
-              <img src={s.image_url} alt={s.model} className="h-full w-full object-cover" />
-            )}
-          </div>
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">
-              {s.brand?.toUpperCase()}
-              {s.carbon_plate && ' · ◆ CARBON'}
-            </div>
-            <div className="font-display text-[17px] font-medium tracking-[-0.015em] text-carbon">
-              {s.model}
-            </div>
-            <div className="mt-0.5 font-mono text-[10.5px] text-ink-50">
-              · {s.discipline}
-              {s.tagline ? ` · ${s.tagline}` : ''}
-            </div>
-          </div>
-          <span className="text-right font-mono text-[13px]">
-            {s.drop_mm}
-            <span className="text-ink-50">mm</span>
-          </span>
-          <span className="text-right font-mono text-[13px]">
-            {s.weight_g}
-            <span className="text-ink-50">g</span>
-          </span>
-          <span className="text-right font-mono text-[13px]">
-            {s.stack_heel_mm}
-            <span className="text-ink-50">mm</span>
-          </span>
-          <span className="text-right font-mono text-[13px]">${s.price_usd}</span>
-          <div className="flex justify-end">
-            <ScoreCircle score={Number(s.our_rating ?? 0)} />
-          </div>
-          <span
-            className="rounded-[3px] bg-carbon py-2 text-center font-mono text-[11px] font-medium text-sand"
-            onClick={(e) => {
-              e.preventDefault();
-              if (s.amazon_url) window.open(s.amazon_url, '_blank', 'noopener');
-            }}
-          >
-            BUY · ${s.price_usd} →
-          </span>
-        </a>
-      ))}
-    </>
-  );
-}
-function VestTable({ rows, sort, setSort }: any) {
-  return (
-    <>
-      <div className="grid grid-cols-[40px_60px_2fr_80px_70px_70px_90px_130px] items-center gap-3 border-b border-rule bg-sand-deep px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
-        <span>#</span>
-        <span></span>
-        <TH k="model" sort={sort} setSort={setSort}>brand / model</TH>
-        <TH k="capacity_l" align="right" sort={sort} setSort={setSort}>capacity</TH>
-        <TH k="weight_g" align="right" sort={sort} setSort={setSort}>wt</TH>
-        <TH k="price_usd" align="right" sort={sort} setSort={setSort}>$</TH>
-        <TH k="our_rating" align="right" sort={sort} setSort={setSort}>score</TH>
-        <span className="text-right">buy</span>
-      </div>
-      {rows.map((s: any, i: number) => (
-        <a
-          key={s.id ?? i}
-          href={`/reviews/${s.slug}`}
-          className={`grid grid-cols-[40px_60px_2fr_80px_70px_70px_90px_130px] items-center gap-3 border-b border-rule-soft px-4 py-3 ${
-            i % 2 ? 'bg-sand-deep/40' : ''
-          }`}
-        >
-          <span className="font-mono text-[12px] text-ink-50">{String(i + 1).padStart(2, '0')}</span>
-          <div className="h-12 w-12 overflow-hidden rounded-[3px] bg-sand-deep">
-            {s.image_url && <img src={s.image_url} alt={s.model} className="h-full w-full object-cover" />}
-          </div>
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">{s.brand?.toUpperCase()}{s.utmb_compliant && ' · UTMB'}</div>
-            <div className="font-display text-[17px] font-medium tracking-[-0.015em] text-carbon">{s.model}</div>
-          </div>
-          <span className="text-right font-mono text-[13px]">{s.capacity_l}<span className="text-ink-50">L</span></span>
-          <span className="text-right font-mono text-[13px]">{s.weight_g}<span className="text-ink-50">g</span></span>
-          <span className="text-right font-mono text-[13px]">${s.price_usd}</span>
-          <div className="flex justify-end"><ScoreCircle score={Number(s.our_rating ?? 0)} /></div>
-          <span className="rounded-[3px] bg-carbon py-2 text-center font-mono text-[11px] font-medium text-sand">BUY · ${s.price_usd} →</span>
-        </a>
-      ))}
-    </>
-  );
-}
-function GelTable({ rows, sort, setSort }: any) {
-  return (
-    <>
-      <div className="grid grid-cols-[40px_60px_2fr_70px_70px_70px_80px_90px_130px] items-center gap-3 border-b border-rule bg-sand-deep px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
-        <span>#</span><span></span>
-        <TH k="product" sort={sort} setSort={setSort}>brand / product</TH>
-        <TH k="carbs_per_serving_g" align="right" sort={sort} setSort={setSort}>carbs</TH>
-        <TH k="sodium_mg" align="right" sort={sort} setSort={setSort}>sodium</TH>
-        <TH k="caffeine_mg" align="right" sort={sort} setSort={setSort}>caffeine</TH>
-        <TH k="price_per_serving" align="right" sort={sort} setSort={setSort}>$/srv</TH>
-        <TH k="our_rating" align="right" sort={sort} setSort={setSort}>score</TH>
-        <span className="text-right">buy</span>
-      </div>
-      {rows.map((s: any, i: number) => (
-        <a key={s.id ?? i} href={`/reviews/${s.slug}`} className={`grid grid-cols-[40px_60px_2fr_70px_70px_70px_80px_90px_130px] items-center gap-3 border-b border-rule-soft px-4 py-3 ${i % 2 ? 'bg-sand-deep/40' : ''}`}>
-          <span className="font-mono text-[12px] text-ink-50">{String(i + 1).padStart(2, '0')}</span>
-          <div className="h-12 w-12 overflow-hidden rounded-[3px] bg-sand-deep">{s.image_url && <img src={s.image_url} alt={s.product} className="h-full w-full object-cover" />}</div>
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">{s.brand?.toUpperCase()}{s.real_food && ' · REAL FOOD'}</div>
-            <div className="font-display text-[17px] font-medium tracking-[-0.015em] text-carbon">{s.product}</div>
-          </div>
-          <span className="text-right font-mono text-[13px]">{s.carbs_per_serving_g}<span className="text-ink-50">g</span></span>
-          <span className="text-right font-mono text-[13px]">{s.sodium_mg}<span className="text-ink-50">mg</span></span>
-          <span className="text-right font-mono text-[13px]">{s.caffeine_mg ?? 0}<span className="text-ink-50">mg</span></span>
-          <span className="text-right font-mono text-[13px]">${s.price_per_serving}</span>
-          <div className="flex justify-end"><ScoreCircle score={Number(s.our_rating ?? 0)} /></div>
-          <span className="rounded-[3px] bg-carbon py-2 text-center font-mono text-[11px] font-medium text-sand">BUY →</span>
-        </a>
-      ))}
-    </>
-  );
-}
-
 // ── score ring ────────────────────────────────────────────────────
+
 function ScoreCircle({ score }: { score: number }) {
   const size = 44;
   const stroke = 3;
@@ -385,12 +386,13 @@ function ScoreCircle({ score }: { score: number }) {
 }
 
 // ── grid-mode card ────────────────────────────────────────────────
+
 function ProductCard({ product, category }: { product: Product; category: Category }) {
   const name = product.model ?? product.product;
   return (
-    <a
-      href={`/reviews/${product.slug}`}
-      className="block overflow-hidden rounded border border-rule bg-paper"
+    <Link
+      href={category === 'shoes' ? `/reviews/${product.slug}` : `/${category === 'vests' ? 'vests' : 'gels'}?highlight=${product.slug}`}
+      className="block overflow-hidden rounded border border-rule bg-paper no-underline"
     >
       <div className="aspect-[4/3] overflow-hidden bg-sand-deep">
         {product.image_url && (
@@ -431,13 +433,14 @@ function ProductCard({ product, category }: { product: Product; category: Catego
           )}
         </div>
         <div className="mt-3 flex items-center justify-between border-t border-rule pt-3">
-          <div className="font-mono text-[11.5px] text-rust">read review →</div>
+          <div className="font-mono text-[11.5px] text-rust">{category === 'shoes' ? 'read review →' : 'view specs →'}</div>
           {product.our_rating && <ScoreCircle score={Number(product.our_rating)} />}
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
+
 function Spec({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">

@@ -3,7 +3,9 @@
 
 import Link from 'next/link';
 import Logo from './logo';
+import SearchTrigger from './search-trigger';
 import { supabase } from '@/lib/supabase';
+import { getAllSearchableProducts } from '@/lib/search-data';
 
 const links = [
   { href: '/shoes',       label: '/shoes' },
@@ -11,7 +13,8 @@ const links = [
   { href: '/gels',        label: '/fuel' },
   { href: '/compare',     label: '/compare' },
   { href: '/finder',      label: '/finder' },
-  { href: '/blog',        label: '/notes' },
+  { href: '/prices',      label: '/prices' },
+  { href: '/changelog',   label: '/changelog' },
 ];
 
 async function getCounts() {
@@ -27,7 +30,10 @@ async function getCounts() {
 }
 
 export default async function Nav() {
-  const counts = await getCounts();
+  const [counts, searchProducts] = await Promise.all([
+    getCounts(),
+    getAllSearchableProducts(),
+  ]);
   return (
     <nav className="sticky top-0 z-30 bg-sand">
       {/* Topbar */}
@@ -68,13 +74,7 @@ export default async function Nav() {
             ))}
           </div>
 
-          <div className="hidden w-[220px] items-center gap-2 rounded border border-rule bg-paper px-3.5 py-2 font-mono text-[11.5px] text-ink-50 md:flex">
-            <span>⌕</span>
-            <span className="truncate">search · drop, brand, terrain…</span>
-            <span className="ml-auto rounded border border-rule bg-sand px-1.5 text-[10px] text-ink-50">
-              ⌘K
-            </span>
-          </div>
+          <SearchTrigger products={searchProducts} />
         </div>
       </div>
     </nav>

@@ -24,8 +24,7 @@ export default function AffiliatePage() {
         </p>
         <p>
           We do not accept payment for reviews. No brand can pay for placement, ratings,
-          or editorial content. Our methodology is documented publicly on the{' '}
-          <a href="/methodology" className="text-rust underline underline-offset-2">Methodology page</a>.
+          or editorial content. Every test unit is purchased at MSRP.
         </p>
         <p>
           Gear we review is purchased at MSRP unless otherwise noted. Loaner units from

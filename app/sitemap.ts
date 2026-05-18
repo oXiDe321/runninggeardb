@@ -1,7 +1,7 @@
 // app/sitemap.ts
 // Dynamic sitemap pulled from Supabase. Every published shoe / vest / gel
 // gets a /reviews/[slug] entry; blog posts get their own; static routes
-// (home, category indexes, methodology, finder, compare) are pinned.
+// (home, category indexes, finder, compare) are pinned.
 
 import type { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
@@ -47,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/gels`,         lastModified: NOW, changeFrequency: 'weekly',  priority: 0.7 },
     { url: `${SITE}/compare`,      lastModified: NOW, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE}/finder`,       lastModified: NOW, changeFrequency: 'monthly', priority: 0.9 },
-    { url: `${SITE}/methodology`,  lastModified: NOW, changeFrequency: 'monthly', priority: 0.6 },
+
     { url: `${SITE}/blog`,         lastModified: NOW, changeFrequency: 'daily',   priority: 0.7 },
     { url: `${SITE}/changelog`,    lastModified: NOW, changeFrequency: 'daily',   priority: 0.5 },
 

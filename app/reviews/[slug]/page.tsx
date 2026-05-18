@@ -1,11 +1,13 @@
 // app/reviews/[slug]/page.tsx
-// v2 review page — server component, async params, JSON-LD graph,
-// E-E-A-T scaffolding throughout. Next.js 16 / React 19.
+// v2 review page — SteamDB-style: spec sheet above fold, collapsed prose,
+// category deltas in right rail.
 
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { getShoeReview, getAllShoeSlugs } from '@/lib/review-data';
+import { getCategoryStats } from '@/lib/stats-data';
+import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
 
 import DisclosureStrip from '@/components/review/disclosure-strip';
 import ScorePanel from '@/components/review/score-panel';
@@ -18,6 +20,7 @@ import AiTransparency from '@/components/review/ai-transparency';
 import StickyBuyBar from '@/components/review/sticky-buy-bar';
 import ReviewProse from '@/components/review/review-prose';
 import ReviewJsonLd from '@/components/review/review-jsonld';
+import SpecSheet from '@/components/review/spec-sheet';
 
 const SITE_URL = 'https://runninggeardb.com';
 
@@ -58,24 +61,54 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-// ── Static params (one page per shoe) ─────────────────────────────
+// ── Static params ────────────────────────────────────────────────
 export async function generateStaticParams() {
   const slugs = await getAllShoeSlugs();
   return slugs.map((slug) => ({ slug }));
 }
 
-// ── Page ──────────────────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────────
+function readingTime(content: string): number {
+  return Math.max(1, Math.ceil(content.split(/\s+/).length / 200));
+}
+
+function firstWords(content: string, n: number): string {
+  const words = content.split(/\s+/).slice(0, n);
+  return words.join(' ') + (content.split(/\s+/).length > n ? '…' : '');
+}
+
+function delta(val: number | null, avg: number | null): string | null {
+  if (val == null || avg == null) return null;
+  const diff = val - avg;
+  if (Math.abs(diff) < 0.05) return 'avg';
+  return diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+}
+
+// ── Page ─────────────────────────────────────────────────────────
 export default async function ReviewPage({ params }: PageProps) {
   const { slug } = await params;
-  const r = await getShoeReview(slug);
+  const [r, stats] = await Promise.all([
+    getShoeReview(slug),
+    getCategoryStats('shoes'),
+  ]);
   if (!r) return notFound();
 
   const bestPrice = r.retailer_prices[0];
+  const rawAmazonUrl = r.amazon_url && r.amazon_url !== 'https://amazon.com' ? r.amazon_url : null;
   const buyUrl =
-    bestPrice?.url ?? r.affiliate_url ?? r.amazon_url ?? `${SITE_URL}/reviews/${r.slug}`;
+    bestPrice?.url
+      ? affiliateUrl(bestPrice.url)
+      : r.affiliate_url
+        ? affiliateUrl(r.affiliate_url)
+        : rawAmazonUrl
+          ? affiliateUrl(rawAmazonUrl)
+          : amazonSearchUrl(r.brand, r.model);
   const buyPrice = bestPrice?.price_usd ?? r.price_usd ?? null;
   const lastChecked = bestPrice?.checked_at ?? null;
   const retailer = bestPrice?.retailer ?? 'amazon';
+
+  const wordCount = r.review_content ? r.review_content.split(/\s+/).length : 0;
+  const readMin = r.review_content ? readingTime(r.review_content) : 0;
 
   return (
     <div className="bg-sand font-sans text-carbon">
@@ -124,6 +157,26 @@ export default async function ReviewPage({ params }: PageProps) {
         </div>
       </header>
 
+      {/* ── Spec sheet (above fold, full width) ────────────────── */}
+      <SpecSheet
+        drop_mm={r.drop_mm}
+        weight_g={r.weight_g}
+        in_house_weight_g={r.in_house_weight_g}
+        stack_heel_mm={r.stack_heel_mm}
+        stack_forefoot_mm={r.stack_forefoot_mm}
+        carbon_plate={r.carbon_plate}
+        rock_plate={r.rock_plate}
+        msrp_usd={r.msrp_usd}
+        best_price={buyPrice}
+        discipline={r.discipline}
+        released_at={r.released_at}
+        tester={r.tester?.name ?? null}
+        miles_tested={r.miles_tested}
+        weeks_tested={r.weeks_tested}
+        test_terrain={r.test_terrain}
+        dimensions={r.dimensions}
+      />
+
       {/* ── Two-column main ─────────────────────────────────────── */}
       <div className="mx-auto grid max-w-7xl grid-cols-[1.55fr_1fr] gap-0 border-b border-rule">
         {/* LEFT */}
@@ -157,7 +210,25 @@ export default async function ReviewPage({ params }: PageProps) {
             </figure>
           )}
 
-          <ReviewProse content={r.review_content} />
+          {/* ── Collapsed prose review ──────────────────────────── */}
+          {r.review_content ? (
+            <details className="mt-6 group" open={wordCount < 300}>
+              <summary className="cursor-pointer select-none rounded-[3px] border border-rule bg-paper px-4 py-3 font-mono text-[12px] text-ink-70 hover:border-carbon marker:content-none">
+                <span className="text-rust">▶</span>{' '}
+                Read full review ({wordCount.toLocaleString()} words, {readMin} min)
+                <span className="ml-2 text-ink-50 text-[11px]">
+                  — {firstWords(r.review_content, 40)}
+                </span>
+              </summary>
+              <div className="mt-4">
+                <ReviewProse content={r.review_content} />
+              </div>
+            </details>
+          ) : (
+            <p className="mt-6 font-mono text-[13px] text-ink-50 text-center py-8">
+              Full review coming soon.
+            </p>
+          )}
 
           {r.related.length > 0 && (
             <section className="mt-9">
@@ -247,15 +318,14 @@ export default async function ReviewPage({ params }: PageProps) {
           {r.retailer_prices.length > 0 ? (
             <RetailerList prices={r.retailer_prices} msrp={r.msrp_usd} />
           ) : (
-            // Single-source fallback so the button is never empty.
-            r.amazon_url && buyPrice && (
+            buyPrice && (
               <RetailerList
                 msrp={r.msrp_usd}
                 prices={[
                   {
                     retailer: 'amazon',
                     price_usd: buyPrice,
-                    url: r.amazon_url,
+                    url: buyUrl,
                     in_stock: true,
                     stock_label: 'in stock',
                     checked_at: new Date().toISOString(),
@@ -267,44 +337,40 @@ export default async function ReviewPage({ params }: PageProps) {
 
           <PriceHistory points={r.price_history} currentPrice={buyPrice} />
 
-          {/* Spec sheet */}
+          {/* ── vs category average ──────────────────────────────── */}
           <div className="mt-3.5 rounded border border-rule bg-paper p-[18px]">
             <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
-              spec sheet
+              vs category avg
             </span>
-            <dl className="mt-2.5 font-mono text-[12px]">
+            <div className="mt-2.5 font-mono text-[12px]">
               {[
-                ['drop', r.drop_mm != null ? `${r.drop_mm} mm` : null],
-                [
-                  'weight (M9)',
-                  r.in_house_weight_g
-                    ? `${r.in_house_weight_g} g · in-house ✓`
-                    : r.weight_g
-                    ? `${r.weight_g} g`
-                    : null,
-                ],
-                ['stack · heel', r.stack_heel_mm != null ? `${r.stack_heel_mm} mm` : null],
-                [
-                  'stack · fore',
-                  r.stack_forefoot_mm != null ? `${r.stack_forefoot_mm} mm` : null,
-                ],
-                ['plate', r.carbon_plate ? 'carbon' : '— none'],
-                ['rock plate', r.rock_plate ? 'yes' : 'no'],
-                ['discipline', r.discipline],
-                ['released', r.released_at ? new Date(r.released_at).getFullYear().toString() : null],
-                ['msrp', r.msrp_usd ? `$${r.msrp_usd}` : null],
+                { label: 'weight', val: r.weight_g, avg: stats.avg_weight_g, unit: 'g' },
+                { label: 'drop', val: r.drop_mm, avg: stats.avg_drop_mm, unit: 'mm' },
+                { label: 'stack', val: r.stack_heel_mm, avg: stats.avg_stack_heel_mm, unit: 'mm' },
+                { label: 'price', val: r.price_usd, avg: stats.avg_price_usd, unit: '$' },
+                { label: 'rating', val: r.our_rating, avg: stats.avg_rating, unit: '/10' },
               ]
-                .filter(([, v]) => v != null)
-                .map(([k, v]) => (
-                  <div
-                    key={k as string}
-                    className="flex justify-between border-b border-rule-soft py-1.5"
-                  >
-                    <dt className="text-ink-50">{k}</dt>
-                    <dd className="text-carbon">{v}</dd>
-                  </div>
-                ))}
-            </dl>
+                .filter(({ val, avg }) => val != null && avg != null)
+                .map(({ label, val, avg, unit }) => {
+                  const d = delta(val, avg);
+                  const better =
+                    (label === 'weight' || label === 'price') ? (val! < avg!) : (val! > avg!);
+                  return (
+                    <div key={label} className="flex justify-between border-b border-rule-soft py-1.5">
+                      <span className="text-ink-50">{label}</span>
+                      <span>
+                        <span className="text-carbon">{val}{unit}</span>
+                        <span className={`ml-2 text-[11px] ${d === 'avg' ? 'text-ink-50' : better ? 'text-moss' : 'text-ink-50'}`}>
+                          {d === 'avg' ? 'avg' : `${d} vs avg ${avg?.toFixed(1)}${unit}`}
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="mt-2 font-mono text-[10px] text-ink-50">
+              vs {stats.count} shoes in category
+            </div>
           </div>
 
           {/* See also */}

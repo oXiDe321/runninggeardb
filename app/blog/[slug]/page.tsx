@@ -8,13 +8,6 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-const categoryStyles: Record<string, string> = {
-  guide: 'bg-sand text-rust-deep dark:bg-carbon-80/40 dark:text-rust',
-  comparison: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  race: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-  nutrition: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-};
-
 function readingTime(content: string): number {
   return Math.max(1, Math.ceil(content.split(/\s+/).length / 200));
 }
@@ -107,79 +100,83 @@ export default async function BlogPostPage({ params }: PageProps) {
   const readMin = readingTime(post.content || '');
 
   return (
-    <div className="w-full">
-      {/* Header */}
-      <section className="relative py-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b border-white/10">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-rust/10 to-purple-500/10 rounded-full blur-3xl" />
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-4">
-            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${categoryStyles[category] || categoryStyles.guide}`}>
-              {category}
-            </span>
+    <div className="bg-sand text-carbon">
+      <header className="border-b border-rule px-8 py-10">
+        <div className="mx-auto max-w-3xl">
+          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-50">
+            rgd ▸ <span className="text-rust">/blog</span> ▸ {slug}
+          </div>
+          <div className="mt-3 flex items-center gap-3 font-mono text-[11px] text-ink-50">
             {post.published_at && (
-              <time className="text-sm text-slate-400">
-                {new Date(post.published_at).toLocaleDateString('en-US', {
+              <time>
+                {new Date(post.published_at).toLocaleDateString('en-GB', {
                   year: 'numeric', month: 'long', day: 'numeric',
                 })}
               </time>
             )}
-            <span className="text-sm text-slate-500">{readMin} min read</span>
+            <span>·</span>
+            <span>{readMin} min read</span>
+            {category && (
+              <>
+                <span>·</span>
+                <span className="uppercase tracking-[0.08em]">{category}</span>
+              </>
+            )}
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="m-0 mt-3 font-display text-[52px] font-semibold leading-[1.02] tracking-[-0.035em]">
             {post.title}
           </h1>
           {post.excerpt && (
-            <p className="text-lg text-slate-400">{post.excerpt}</p>
+            <p className="mt-3 font-mono text-[14px] text-ink-70">{post.excerpt}</p>
           )}
         </div>
-      </section>
+      </header>
 
-      {/* Article body */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <article className="prose prose-slate dark:prose-invert max-w-none
-          prose-headings:font-bold prose-headings:text-slate-950 dark:prose-headings:text-white
-          prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
-          prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-          prose-p:text-lg prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4
-          prose-li:text-slate-600 dark:prose-li:text-slate-300
+      <div className="mx-auto max-w-3xl px-8 py-12">
+        <article className="prose max-w-none
+          prose-headings:font-display prose-headings:font-semibold prose-headings:text-carbon prose-headings:tracking-[-0.02em]
+          prose-h2:text-[28px] prose-h2:mt-10 prose-h2:mb-3
+          prose-h3:text-[20px] prose-h3:mt-8 prose-h3:mb-2
+          prose-p:text-[15px] prose-p:text-ink-70 prose-p:leading-relaxed prose-p:mb-4
+          prose-li:text-[15px] prose-li:text-ink-70
           prose-a:text-rust prose-a:no-underline hover:prose-a:underline
-          prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-semibold
-          prose-table:rounded-xl prose-table:overflow-hidden
-          prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-2 prose-th:text-sm prose-th:font-semibold
-          prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-td:border-b prose-td:border-slate-100 dark:prose-td:border-white/5
-          prose-thead:border-b prose-thead:border-slate-200 dark:prose-thead:border-white/10
-          prose-code:bg-slate-100 dark:prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-          prose-blockquote:border-l-rust prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-800/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
+          prose-strong:text-carbon prose-strong:font-semibold
+          prose-table:rounded prose-table:overflow-hidden prose-table:border prose-table:border-rule
+          prose-th:bg-sand-deep prose-th:px-3 prose-th:py-2 prose-th:font-mono prose-th:text-[11px] prose-th:font-semibold prose-th:uppercase prose-th:tracking-[0.08em]
+          prose-td:px-3 prose-td:py-2 prose-td:font-mono prose-td:text-[13px] prose-td:border-b prose-td:border-rule-soft
+          prose-thead:border-b prose-thead:border-rule
+          prose-code:bg-paper prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-[13px]
+          prose-blockquote:border-l-rust prose-blockquote:bg-paper prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r
+          prose-hr:border-rule
         ">
           {post.content ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {post.content}
             </ReactMarkdown>
           ) : (
-            <p className="text-slate-500 dark:text-slate-400 text-center py-8">
+            <p className="font-mono text-[13px] text-ink-50 text-center py-8">
               No content available.
             </p>
           )}
         </article>
 
-        <footer className="border-t border-slate-200 dark:border-white/10 pt-8 mt-16">
-          <h3 className="text-lg font-semibold text-slate-950 dark:text-white mb-4">
+        <footer className="border-t border-rule pt-8 mt-12">
+          <h3 className="font-display text-[22px] font-semibold tracking-[-0.02em] mb-4">
             Compare specs yourself
           </h3>
           <div className="flex flex-wrap gap-3">
-            <Link href="/shoes" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-full font-medium text-sm hover:bg-rust-deep dark:hover:bg-rust transition-colors">
-              Browse Shoes
+            <Link href="/shoes" className="rounded-[3px] bg-carbon px-5 py-2.5 font-mono text-[13px] font-medium text-sand">
+              Browse Shoes →
             </Link>
-            <Link href="/vests" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full font-medium text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <Link href="/vests" className="rounded-[3px] border border-carbon px-5 py-2.5 font-mono text-[13px] text-carbon">
               Browse Vests
             </Link>
-            <Link href="/gels" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full font-medium text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <Link href="/gels" className="rounded-[3px] border border-carbon px-5 py-2.5 font-mono text-[13px] text-carbon">
               Browse Nutrition
             </Link>
           </div>
         </footer>
 
-        {/* JSON-LD structured data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

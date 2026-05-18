@@ -1,6 +1,7 @@
 // components/review/retailer-list.tsx
 // Multi-retailer live price block. Click-tracked affiliate links live here.
 
+import { affiliateUrl } from '@/lib/amazon';
 import type { RetailerPrice } from '@/lib/review-types';
 
 export default function RetailerList({
@@ -39,7 +40,7 @@ export default function RetailerList({
       </div>
 
       <a
-        href={best.url}
+        href={affiliateUrl(best.url)}
         rel="sponsored nofollow noopener"
         target="_blank"
         className="mt-3.5 block w-full rounded-[3px] bg-rust py-[13px] text-center font-mono text-[13px] font-semibold tracking-[0.04em] text-sand"
@@ -52,7 +53,7 @@ export default function RetailerList({
           {prices.slice(1).map((p) => (
             <a
               key={p.retailer}
-              href={p.url}
+              href={affiliateUrl(p.url)}
               rel="sponsored nofollow noopener"
               target="_blank"
               className="grid grid-cols-[1fr_auto_auto] gap-2 rounded-[3px] bg-carbon-80 px-2.5 py-[7px] font-mono text-[11.5px]"

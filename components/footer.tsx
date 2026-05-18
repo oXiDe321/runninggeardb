@@ -24,9 +24,8 @@ const cols = [
   {
     h: 'NOTES',
     items: [
-      ['Methodology',  '/methodology'],
-      ['How we score', '/methodology#03'],
-      ['How we earn',  '/methodology#05'],
+      ['Blog',         '/blog'],
+      ['How we earn',  '/legal/affiliate'],
       ['About',        '/about'],
     ] as const,
   },
@@ -85,7 +84,7 @@ export default function Footer() {
         <div className="mt-4 flex justify-between font-mono text-[10.5px] text-ink-30">
           <span>
             © {new Date().getFullYear()} RGD · we earn from qualifying purchases (
-            <Link href="/methodology#05" className="border-b border-sand/30">
+            <Link href="/legal/affiliate" className="border-b border-sand/30">
               full disclosure
             </Link>
             )

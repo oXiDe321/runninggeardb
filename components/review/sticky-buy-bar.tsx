@@ -4,6 +4,7 @@
 // Slides up once the user scrolls past the hero (~600px in).
 
 import { useEffect, useState } from 'react';
+import { affiliateUrl } from '@/lib/amazon';
 
 interface Props {
   brand: string;
@@ -68,7 +69,7 @@ export default function StickyBuyBar({
           </span>
         )}
         <a
-          href={buyUrl}
+          href={affiliateUrl(buyUrl)}
           rel="sponsored nofollow noopener"
           target="_blank"
           className="rounded-[3px] bg-rust px-[22px] py-3 font-mono text-[13px] font-semibold tracking-[0.04em] text-sand"

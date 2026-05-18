@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Plus, ArrowLeftRight } from 'lucide-react';
+import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
 
 interface Product {
   id: string;
@@ -27,22 +28,24 @@ const specsForCategory: Record<Category, { label: string; key: string; format?: 
     { label: 'Weight', key: 'weight_g', format: (v) => `${v}g` },
     { label: 'Carbon Plate', key: 'carbon_plate', format: (v) => v ? 'Yes' : 'No' },
     { label: 'Price', key: 'price_usd', format: (v) => `$${v}` },
-    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/5` },
+    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/10` },
   ],
   vests: [
     { label: 'Capacity', key: 'capacity_l', format: (v) => `${v}L` },
     { label: 'Weight', key: 'weight_g', format: (v) => `${v}g` },
     { label: 'UTMB Compliant', key: 'utmb_compliant', format: (v) => v ? 'Yes' : 'No' },
     { label: 'Price', key: 'price_usd', format: (v) => `$${v}` },
-    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/5` },
+    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/10` },
   ],
   gels: [
     { label: 'Format', key: 'format' },
     { label: 'Carbs', key: 'carbs_per_serving_g', format: (v) => `${v}g` },
+    { label: 'Sodium', key: 'sodium_mg', format: (v) => v > 0 ? `${v}mg` : 'None' },
     { label: 'Caffeine', key: 'caffeine_mg', format: (v) => v > 0 ? `${v}mg` : 'None' },
+    { label: 'Calories', key: 'calories', format: (v) => v ? `${v}` : '—' },
     { label: 'Real Food', key: 'real_food', format: (v) => v ? 'Yes' : 'No' },
     { label: 'Price/serving', key: 'price_per_serving', format: (v) => `$${v}` },
-    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/5` },
+    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/10` },
   ],
 };
 
@@ -73,7 +76,7 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
             onClick={() => { setCategory(cat); setSelected([]); }}
             className={`px-4 py-2 font-mono text-[11px] tracking-wider uppercase transition-all duration-150 border border-transparent ${
               category === cat
-                ? 'bg-rust text-white border-rust'
+                ? 'bg-rust text-sand border-rust'
                 : 'bg-paper text-ink-50 border-rule hover:border-carbon hover:text-carbon'
             }`}
           >
@@ -144,7 +147,7 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                 </thead>
                 <tbody>
                   {specs.map((spec, i) => (
-                    <tr key={spec.key} className={i % 2 === 0 ? 'bg-white dark:bg-carbon' : 'bg-paper/50 dark:bg-carbon-80/50'}>
+                    <tr key={spec.key} className={i % 2 === 0 ? 'bg-paper dark:bg-carbon' : 'bg-sand dark:bg-carbon-80'}>
                       <td className="py-3 px-4 font-mono text-[11px] text-ink-70 sticky left-0 bg-inherit">
                         {spec.label}
                       </td>
@@ -186,18 +189,21 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                     </td>
                     {selected.map((product) => (
                       <td key={product.id} className="text-center py-3 px-4">
-                        {product.amazon_url && product.amazon_url !== 'https://amazon.com' ? (
-                          <a
-                            href={product.amazon_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-block px-4 py-1.5 bg-rust text-white font-mono text-[11px] font-semibold hover:bg-rust-deep transition-colors"
-                          >
-                            View on Amazon
-                          </a>
-                        ) : (
-                          <span className="text-ink-30 text-xs">—</span>
-                        )}
+                        {(() => {
+                          const url = product.amazon_url && product.amazon_url !== 'https://amazon.com'
+                            ? affiliateUrl(product.amazon_url)
+                            : amazonSearchUrl(product.brand, (product.model || product.product || ''));
+                          return (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block px-4 py-1.5 bg-rust text-sand font-mono text-[11px] font-semibold hover:bg-rust-deep transition-colors"
+                            >
+                              View on Amazon
+                            </a>
+                          );
+                        })()}
                       </td>
                     ))}
                   </tr>

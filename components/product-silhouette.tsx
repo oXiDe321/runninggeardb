@@ -11,7 +11,7 @@ export default function ProductSilhouette({
         : 'text-emerald-200 dark:text-emerald-800';
 
   return (
-    <div className="h-48 bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-8">
+    <div className="h-48 bg-sand dark:bg-carbon-80 flex items-center justify-center p-8">
       {category === 'shoes' && (
         <svg
           viewBox="0 0 120 80"

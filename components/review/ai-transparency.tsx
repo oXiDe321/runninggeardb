@@ -90,10 +90,10 @@ export default function AiTransparency({
           <span><span className="text-ochre">●</span> AI-drafted from verified data</span>
         )}
         <a
-          href="/methodology"
+          href="/legal/affiliate"
           className="ml-auto border-b border-sand/40 text-sand"
         >
-          full editorial standards →
+          full disclosure →
         </a>
       </div>
     </aside>

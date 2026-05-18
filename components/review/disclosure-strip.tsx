@@ -13,7 +13,7 @@ export default function DisclosureStrip({ lastCheckedAt }: { lastCheckedAt?: str
           <span>
             RGD earns a commission from purchases via these links. We pay MSRP for every test
             unit.{' '}
-            <a href="/methodology" className="border-b border-rust text-rust">
+            <a href="/legal/affiliate" className="border-b border-rust text-rust">
               How we earn &amp; test →
             </a>
           </span>
