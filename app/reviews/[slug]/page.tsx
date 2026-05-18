@@ -2,6 +2,7 @@
 // v2 review page — SteamDB-style: spec sheet above fold, collapsed prose,
 // category deltas in right rail.
 
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
@@ -195,11 +196,13 @@ export default async function ReviewPage({ params }: PageProps) {
 
           {r.image_url && (
             <figure className="mt-6">
-              <div className="aspect-[16/9] overflow-hidden bg-sand-deep">
-                <img
+              <div className="relative aspect-[16/9] overflow-hidden bg-sand-deep">
+                <Image
                   src={r.image_url}
                   alt={`${r.brand} ${r.model}`}
-                  className="h-full w-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
               <figcaption className="mt-2 font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-50">
@@ -387,13 +390,15 @@ export default async function ReviewPage({ params }: PageProps) {
                   >
                     <a
                       href={`/reviews/${c.slug}`}
-                      className="h-11 w-11 overflow-hidden rounded-[3px]"
+                      className="relative block h-11 w-11 overflow-hidden rounded-[3px]"
                     >
                       {c.image_url && (
-                        <img
+                        <Image
                           src={c.image_url}
                           alt={c.model}
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="44px"
                         />
                       )}
                     </a>

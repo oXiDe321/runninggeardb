@@ -15,6 +15,21 @@ interface Target {
 }
 
 const TARGETS: Target[] = [
+  // Original 14 shoes with brand CDN images that need Amazon replacements
+  { brand: 'Altra', model: 'Lone Peak 8', table: 'shoes', slug: 'altra-lone-peak-8', altQuery: 'Altra Lone Peak 8 trail running shoe' },
+  { brand: 'Altra', model: 'Olympus 6', table: 'shoes', slug: 'altra-olympus-6', altQuery: 'Altra Olympus 6 trail running shoe' },
+  { brand: 'ASICS', model: 'Fuji Speed 2', table: 'shoes', slug: 'asics-fuji-speed-2', altQuery: 'ASICS Fuji Speed 2 trail running shoe' },
+  { brand: 'ASICS', model: 'Gel-Kayano 31', table: 'shoes', slug: 'asics-gel-kayano-31', altQuery: 'ASICS Gel-Kayano 31 running shoe' },
+  { brand: 'Brooks', model: 'Cascadia 18', table: 'shoes', slug: 'brooks-cascadia-18', altQuery: 'Brooks Cascadia 18 trail running shoe' },
+  { brand: 'Brooks', model: 'Ghost 16', table: 'shoes', slug: 'brooks-ghost-16', altQuery: 'Brooks Ghost 16 running shoe' },
+  { brand: 'HOKA', model: 'Clifton 9', table: 'shoes', slug: 'hoka-clifton-9', altQuery: 'HOKA Clifton 9 running shoe' },
+  { brand: 'Inov-8', model: 'Trailfly Ultra G 300 Max', table: 'shoes', slug: 'inov-8-trailfly-ultra-g-300-max', altQuery: 'Inov-8 Trailfly Ultra G 300 Max trail shoe' },
+  { brand: 'La Sportiva', model: 'Jackal III', table: 'shoes', slug: 'la-sportiva-jackal-iii', altQuery: 'La Sportiva Jackal III trail running shoe' },
+  { brand: 'New Balance', model: 'Fresh Foam X 1080 v14', table: 'shoes', slug: 'new-balance-fresh-foam-x-1080-v14', altQuery: 'New Balance Fresh Foam 1080 v14 running shoe' },
+  { brand: 'On', model: 'Cloudmonster 2', table: 'shoes', slug: 'on-cloudmonster-2', altQuery: 'On Cloudmonster 2 running shoe' },
+  { brand: 'On', model: 'Cloudultra 2', table: 'shoes', slug: 'on-cloudultra-2', altQuery: 'On Cloudultra 2 trail running shoe' },
+  { brand: 'Saucony', model: 'Endorphin Speed 4', table: 'shoes', slug: 'saucony-endorphin-speed-4', altQuery: 'Saucony Endorphin Speed 4 running shoe' },
+  { brand: 'Saucony', model: 'Peregrine 14', table: 'shoes', slug: 'saucony-peregrine-14', altQuery: 'Saucony Peregrine 14 trail running shoe' },
   // Shoes — try broader queries
   { brand: 'Nike', model: 'Alphafly 3', table: 'shoes', slug: 'nike-alphafly-3', altQuery: 'Nike Alphafly 3 running shoes mens' },
   // Vests — use more specific searches
