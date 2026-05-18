@@ -13,8 +13,8 @@ export default function GelsPage() {
       title="Running Nutrition"
       description="Gels, chews, drinks. Filter by carbs, sodium, caffeine, real food, and price."
       category="gels"
-      accent="emerald"
       table="gels"
+      slug="/gels"
     />
   );
 }

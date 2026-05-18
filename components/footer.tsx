@@ -1,85 +1,98 @@
+// components/footer.tsx — Specs-Engine version.
+
 import Link from 'next/link';
-import Logo from './logo';
+
+const cols = [
+  {
+    h: 'CATEGORIES',
+    items: [
+      ['shoes / trail', '/shoes?d=trail'],
+      ['shoes / road',  '/shoes?d=road'],
+      ['shoes / hyrox', '/shoes?d=hyrox'],
+      ['vests / race',  '/vests'],
+      ['fuel / gels',   '/gels'],
+    ] as const,
+  },
+  {
+    h: 'TOOLS',
+    items: [
+      ['/finder',    '/finder'],
+      ['/compare',   '/compare'],
+      ['/changelog', '/changelog'],
+    ] as const,
+  },
+  {
+    h: 'NOTES',
+    items: [
+      ['Methodology',  '/methodology'],
+      ['How we score', '/methodology#03'],
+      ['How we earn',  '/methodology#05'],
+      ['About',        '/about'],
+    ] as const,
+  },
+  {
+    h: 'LEGAL',
+    items: [
+      ['Affiliate disclosure', '/legal/affiliate'],
+      ['Privacy',              '/legal/privacy'],
+      ['Terms',                '/legal/terms'],
+      ['Contact',              '/contact'],
+    ] as const,
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="relative bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 border-t border-slate-200 dark:border-white/10 mt-32">
-      {/* Background accent */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-b from-brand-200/10 dark:from-brand-500/5 to-transparent rounded-full blur-3xl" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
+    <footer className="bg-carbon px-8 pb-6 pt-12 text-sand">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid grid-cols-[1.4fr_repeat(4,1fr)] gap-8 border-b border-sand/14 pb-8">
           <div>
-            <div className="mb-6">
-              <Logo />
+            <div className="flex items-center gap-2.5">
+              <div className="grid h-8 w-8 place-items-center bg-sand font-mono text-[14px] font-bold text-carbon">
+                R/
+              </div>
+              <div className="font-display text-[18px] font-semibold tracking-[-0.02em]">
+                RunningGearDB
+              </div>
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              Data-first gear database. Filterable specs and side-by-side comparisons.
+            <p className="mt-3.5 max-w-[320px] text-[13px] leading-[1.55] text-ink-30">
+              An open database of running gear. Every spec measured, every claim sourced,
+              every purchase trackable. Updated by hand &amp; by machine.
             </p>
+            <div className="mt-3.5 font-mono text-[10.5px] tracking-[0.1em] text-ochre">
+              ● LIVE · SKU INDEXED
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-slate-950 dark:text-white mb-4 flex items-center gap-2">
-              <span className="text-brand-600 dark:text-brand-400">→</span> Gear
-            </h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <Link href="/shoes" className="text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition font-medium">
-                  Shoes
-                </Link>
-              </li>
-              <li>
-                <Link href="/vests" className="text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition font-medium">
-                  Vests & Packs
-                </Link>
-              </li>
-              <li>
-                <Link href="/gels" className="text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition font-medium">
-                  Nutrition
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-950 dark:text-white mb-4 flex items-center gap-2">
-              <span className="text-brand-600 dark:text-brand-400">→</span> Explore
-            </h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <Link href="/compare" className="text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition font-medium">
-                  Compare Specs
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog" className="text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition font-medium">
-                  Guides & Tips
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-950 dark:text-white mb-4 flex items-center gap-2">
-              <span className="text-brand-600 dark:text-brand-400">→</span> Legal
-            </h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <a href="#" className="text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition font-medium">
-                  Affiliate Disclosure
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition font-medium">
-                  Privacy Policy
-                </a>
-              </li>
-            </ul>
-          </div>
+
+          {cols.map((c) => (
+            <div key={c.h}>
+              <div className="mb-3 font-mono text-[10px] tracking-[0.16em] text-ink-30">
+                {c.h}
+              </div>
+              <ul className="grid list-none gap-2 p-0 font-mono text-[12px]">
+                {c.items.map(([l, href]) => (
+                  <li key={l}>
+                    <Link href={href} className="text-sand">
+                      {l}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="border-t border-slate-200 dark:border-white/10 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-            <p>&copy; 2026 RunningGearDB. Built for runners.</p>
-            <p className="text-xs">v1.0 — Data-first gear database.</p>
-          </div>
+        <div className="mt-4 flex justify-between font-mono text-[10.5px] text-ink-30">
+          <span>
+            © {new Date().getFullYear()} RGD · we earn from qualifying purchases (
+            <Link href="/methodology#05" className="border-b border-sand/30">
+              full disclosure
+            </Link>
+            )
+          </span>
+          <span>
+            <span className="text-moss">●</span> all-systems-nominal
+          </span>
         </div>
       </div>
     </footer>

@@ -97,7 +97,7 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                   onClick={() => toggleProduct(product)}
                   className={`w-full text-left px-4 py-3 flex items-center justify-between transition-colors ${
                     isSelected
-                      ? 'bg-brand-50 dark:bg-brand-950/30 border-l-2 border-brand-500'
+                      ? 'bg-sand dark:bg-carbon-80/30 border-l-2 border-rust'
                       : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-l-2 border-transparent'
                   }`}
                 >
@@ -106,7 +106,7 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                     <p className="text-xs text-slate-500 dark:text-slate-400">{product.model || product.product}</p>
                   </div>
                   {isSelected ? (
-                    <X className="w-4 h-4 text-brand-500" />
+                    <X className="w-4 h-4 text-rust" />
                   ) : (
                     <Plus className="w-4 h-4 text-slate-400" />
                   )}
@@ -170,7 +170,7 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                             key={product.id}
                             className={`text-center py-3 px-4 font-mono ${
                               isBest
-                                ? 'text-brand-600 dark:text-brand-400 font-semibold'
+                                ? 'text-rust font-semibold'
                                 : 'text-slate-600 dark:text-slate-400'
                             }`}
                           >
@@ -192,7 +192,7 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                             href={product.amazon_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold hover:bg-brand-700 dark:hover:bg-brand-500 transition-colors"
+                            className="inline-block px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold hover:bg-rust-deep dark:hover:bg-rust transition-colors"
                           >
                             View on Amazon
                           </a>

@@ -1,70 +1,73 @@
-import ProductTable from '@/components/product-table';
-import { supabase } from '@/lib/supabase';
+// components/category-page.tsx — Specs-Engine version.
+// Server component: pulls products + count metadata + last-sync timestamp.
 
-interface CategoryPageProps {
+import { supabase } from '@/lib/supabase';
+import ProductTable from './product-table';
+
+interface Props {
   title: string;
   description: string;
   category: 'shoes' | 'vests' | 'gels';
-  accent: 'orange' | 'blue' | 'emerald';
   table: 'shoes' | 'vests' | 'gels';
+  slug: string; // '/shoes' | '/vests' | '/fuel'
 }
 
-const accentStyles = {
-  orange: {
-    section: 'from-brand-50 via-slate-50 to-white dark:from-brand-950/20 dark:via-slate-950 dark:to-slate-950',
-    border: 'border-brand-100 dark:border-brand-900/30',
-    orb: 'from-brand-200/20 dark:from-brand-500/5',
-  },
-  blue: {
-    section: 'from-blue-50 via-slate-50 to-white dark:from-blue-950/20 dark:via-slate-950 dark:to-slate-950',
-    border: 'border-blue-100 dark:border-blue-900/30',
-    orb: 'from-blue-200/20 dark:from-blue-500/5',
-  },
-  emerald: {
-    section: 'from-emerald-50 via-slate-50 to-white dark:from-emerald-950/20 dark:via-slate-950 dark:to-slate-950',
-    border: 'border-emerald-100 dark:border-emerald-900/30',
-    orb: 'from-emerald-200/20 dark:from-emerald-500/5',
-  },
-};
-
-export default async function CategoryPage({
-  title,
-  description,
-  category,
-  accent,
-  table,
-}: CategoryPageProps) {
-  const s = accentStyles[accent];
-
+export default async function CategoryPage({ title, description, category, table, slug }: Props) {
   const { data: products } = await supabase
     .from(table)
     .select('*')
-    .eq('published', true)
-    .order('our_rating', { ascending: false });
+    .eq('published', true);
+
+  const total = products?.length ?? 0;
+  const avgRating =
+    total > 0
+      ? (
+          products!
+            .map((p: any) => Number(p.our_rating))
+            .filter((n) => Number.isFinite(n))
+            .reduce((s, n) => s + n, 0) /
+          products!.filter((p: any) => Number.isFinite(Number(p.our_rating))).length
+        ).toFixed(2)
+      : '—';
 
   return (
-    <div className="w-full">
-      {/* Header */}
-      <section
-        className={`relative py-16 bg-gradient-to-br ${s.section} border-b ${s.border}`}
-      >
-        <div
-          className={`absolute top-0 right-0 w-96 h-96 bg-gradient-to-br ${s.orb} to-transparent rounded-full blur-3xl`}
-        />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-5xl font-bold text-slate-950 dark:text-white mb-2">
-            {title}
-          </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
-            {description}
-          </p>
+    <div className="bg-sand text-carbon">
+      <header className="border-b border-rule px-8 py-9">
+        <div className="mx-auto max-w-7xl">
+          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-50">
+            rgd ▸ index ▸ <span className="text-rust">{slug.replace('/', '')}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-1 items-end gap-8 md:grid-cols-[1fr_360px]">
+            <div>
+              <h1 className="m-0 font-display text-[72px] font-semibold leading-[0.95] tracking-[-0.04em]">
+                {slug.replace('/', '')} <span className="text-rust">· {total}</span>
+              </h1>
+              <p className="mt-3 max-w-[640px] font-mono text-[14px] leading-[1.6] text-ink-70">
+                {description}
+              </p>
+            </div>
+            <div className="rounded border border-rule bg-paper p-4 font-mono text-[11.5px] leading-[1.8]">
+              <Row k="last sync"     v="04:12 UTC" />
+              <Row k="price source"  v="amazon · rei · running-warehouse" />
+              <Row k="coverage"      v={`● ${total}/${total} reviewed`} good />
+              <Row k="avg score"     v={`${avgRating} / 10`} />
+            </div>
+          </div>
         </div>
-      </section>
+      </header>
 
-      {/* Products */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <ProductTable products={products || []} category={category} />
-      </div>
+      <section className="mx-auto max-w-7xl px-8 py-8">
+        <ProductTable products={products ?? []} category={category} />
+      </section>
+    </div>
+  );
+}
+
+function Row({ k, v, good }: { k: string; v: string; good?: boolean }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-ink-50">{k}</span>
+      <span className={good ? 'text-moss' : 'text-carbon'}>{v}</span>
     </div>
   );
 }

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const categoryStyles: Record<string, string> = {
-  guide: 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300',
+  guide: 'bg-sand text-rust-deep dark:bg-carbon-80/40 dark:text-rust',
   comparison: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   race: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
   nutrition: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
@@ -50,7 +50,7 @@ export default async function BlogPage() {
             {featured && (
               <Link href={`/blog/${featured.slug}`} className="block group">
                 <article className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 border border-white/10 surface-floating transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl">
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-brand-500/10 to-purple-500/10 rounded-full blur-3xl" />
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-rust/10 to-purple-500/10 rounded-full blur-3xl" />
                   <div className="relative p-8 sm:p-12">
                     <div className="flex items-center gap-3 mb-4">
                       {featured.category && (
@@ -68,13 +68,13 @@ export default async function BlogPage() {
                         </time>
                       )}
                     </div>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 group-hover:text-brand-400 transition-colors">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 group-hover:text-rust transition-colors">
                       {featured.title}
                     </h2>
                     {featured.excerpt && (
                       <p className="text-lg text-slate-400 max-w-2xl">{featured.excerpt}</p>
                     )}
-                    <div className="mt-6 inline-flex items-center gap-2 text-brand-400 font-medium">
+                    <div className="mt-6 inline-flex items-center gap-2 text-rust font-medium">
                       Read article
                       <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -98,7 +98,7 @@ export default async function BlogPage() {
                           </span>
                         )}
                       </div>
-                      <h3 className="text-lg font-semibold text-slate-950 dark:text-white mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      <h3 className="text-lg font-semibold text-slate-950 dark:text-white mb-2 group-hover:text-rust transition-colors">
                         {post.title}
                       </h3>
                       {post.excerpt && (

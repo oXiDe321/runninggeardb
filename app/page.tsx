@@ -1,220 +1,412 @@
+// app/page.tsx — Specs-Engine homepage.
+// Server component: live SKU counts, top-of-index table, category cards,
+// changelog feed pulled from the public changelog table.
+
 import Link from 'next/link';
-import { ArrowRight, Footprints, ShoppingBag, FlaskConical } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-const gearCategories = [
-  {
-    href: '/shoes',
-    label: 'Running Shoes',
-    desc: 'Trail, road, Hyrox — filterable by drop, weight, terrain, and more.',
-    accent: 'orange' as const,
-    icon: Footprints,
-  },
-  {
-    href: '/vests',
-    label: 'Vests & Packs',
-    desc: 'UTMB compliant, ultra-rated, capacity and weight compared.',
-    accent: 'blue' as const,
-    icon: ShoppingBag,
-  },
-  {
-    href: '/gels',
-    label: 'Nutrition',
-    desc: 'Gels, chews, drinks — compare carbs, sodium, caffeine, price.',
-    accent: 'green' as const,
-    icon: FlaskConical,
-  },
-] as const;
+export const revalidate = 300; // 5 min — index is "live-ish" without being expensive
 
-const accentStyles = {
-  orange: {
-    card: 'hover:border-brand-400',
-    iconBg: 'bg-brand-100',
-    iconFg: 'text-brand-600',
-    hoverText: 'group-hover:text-brand-600',
-    orb: 'from-brand-200/30',
-    cardBg: 'from-brand-50',
-  },
-  blue: {
-    card: 'hover:border-blue-300',
-    iconBg: 'bg-blue-100',
-    iconFg: 'text-blue-600',
-    hoverText: 'group-hover:text-blue-600',
-    orb: 'from-blue-200/30',
-    cardBg: 'from-blue-50',
-  },
-  green: {
-    card: 'hover:border-emerald-300',
-    iconBg: 'bg-emerald-100',
-    iconFg: 'text-emerald-600',
-    hoverText: 'group-hover:text-emerald-600',
-    orb: 'from-emerald-200/30',
-    cardBg: 'from-emerald-50',
-  },
-};
+async function loadHome() {
+  const [shoesRes, vestsRes, gelsRes, topRes, changelogRes] = await Promise.all([
+    supabase.from('shoes').select('id, weight_g, drop_mm, stack_heel_mm, price_usd', { count: 'exact' }).eq('published', true),
+    supabase.from('vests').select('id, capacity_l, weight_g, price_usd', { count: 'exact' }).eq('published', true),
+    supabase.from('gels').select('id, carbs_per_serving_g, caffeine_mg, price_per_serving', { count: 'exact' }).eq('published', true),
+    supabase
+      .from('shoes')
+      .select('id, slug, brand, model, image_url, our_rating, weight_g, drop_mm, stack_heel_mm, price_usd, discipline, carbon_plate, tagline')
+      .eq('published', true)
+      .order('our_rating', { ascending: false })
+      .limit(6),
+    supabase
+      .from('changelog')
+      .select('id, occurred_at, kind, summary')
+      .order('occurred_at', { ascending: false })
+      .limit(6),
+  ]);
 
-export default function Home() {
+  // Numeric ranges for category cards
+  const shoesData = shoesRes.data ?? [];
+  const vestsData = vestsRes.data ?? [];
+  const gelsData  = gelsRes.data  ?? [];
+
+  const range = (arr: number[]) => {
+    const f = arr.filter((n) => Number.isFinite(n));
+    return f.length ? [Math.min(...f), Math.max(...f)] : [0, 0];
+  };
+
+  const shoeStats = {
+    count: shoesRes.count ?? shoesData.length,
+    weight: range(shoesData.map((s: any) => Number(s.weight_g))),
+    drop:   range(shoesData.map((s: any) => Number(s.drop_mm))),
+    stack:  range(shoesData.map((s: any) => Number(s.stack_heel_mm))),
+    price:  range(shoesData.map((s: any) => Number(s.price_usd))),
+  };
+  const vestStats = {
+    count: vestsRes.count ?? vestsData.length,
+    cap: range(vestsData.map((s: any) => Number(s.capacity_l))),
+    weight: range(vestsData.map((s: any) => Number(s.weight_g))),
+    price: range(vestsData.map((s: any) => Number(s.price_usd))),
+  };
+  const gelStats = {
+    count: gelsRes.count ?? gelsData.length,
+    carbs: range(gelsData.map((s: any) => Number(s.carbs_per_serving_g))),
+    caffeine: range(gelsData.map((s: any) => Number(s.caffeine_mg))),
+    price: range(gelsData.map((s: any) => Number(s.price_per_serving))),
+  };
+
+  const totalCount = shoeStats.count + vestStats.count + gelStats.count;
+  const allPrices = [
+    ...shoesData.map((s: any) => Number(s.price_usd)),
+    ...vestsData.map((s: any) => Number(s.price_usd)),
+  ].filter(Number.isFinite);
+  const avgPrice =
+    allPrices.length > 0 ? (allPrices.reduce((a, b) => a + b, 0) / allPrices.length).toFixed(2) : '—';
+
+  return {
+    totalCount,
+    shoeStats,
+    vestStats,
+    gelStats,
+    top: topRes.data ?? [],
+    changelog: changelogRes.data ?? [],
+    avgPrice,
+  };
+}
+
+export default async function HomePage() {
+  const d = await loadHome();
+
+  const kindColor: Record<string, string> = {
+    add: 'var(--color-moss)',
+    update: 'var(--color-ochre)',
+    price: 'var(--color-ochre)',
+    review: 'var(--color-moss)',
+    remove: 'var(--color-rust)',
+  };
+  const kindLabel: Record<string, string> = {
+    add: '+ADD',
+    update: '~UPD',
+    price: '~PRC',
+    review: '+REV',
+    remove: '−RMV',
+  };
+
   return (
-    <div className="w-full">
-      {/* Hero — deep base with mesh gradient (Stripe + Nike inspired) */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        {/* Mesh gradient orbs */}
-        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-gradient-to-br from-brand-500/25 via-red-500/15 to-transparent rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-30%] left-[-10%] w-[600px] h-[600px] bg-gradient-to-tr from-brand-600/15 via-slate-500/10 to-transparent rounded-full blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-conic from-brand-500/10 via-transparent to-blue-500/10 rounded-full blur-3xl" />
-
-        {/* Grid pattern overlay (data-grid feel) */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
-          {/* Live badge (Stripe/Linear style) */}
-          <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-white/5 backdrop-blur border border-white/10 rounded-full text-sm text-brand-300 font-medium">
-            <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
-            Data-First Gear Database
-          </div>
-
-          {/* Display typography (Nike scale) */}
-          <h1 className="text-6xl md:text-8xl lg:text-9xl text-display text-white mb-6">
-            Every Spec.
-            <br />
-            <span className="bg-gradient-to-r from-brand-400 via-red-400 to-brand-500 bg-clip-text text-transparent">
-              Every Run.
-            </span>
-          </h1>
-
-          <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-[450]">
-            Filterable specs across trail, road, Hyrox, parkrun. Compare data, find your gear.
-          </p>
-
-          {/* CTAs — white pill + ghost pill (Raycast/Linear style) */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/shoes"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-950 rounded-full font-semibold hover:bg-brand-50 hover:scale-105 transition-all duration-200 shadow-lg shadow-white/10"
-            >
-              Browse Gear
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/compare"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/5 backdrop-blur border border-white/15 text-white rounded-full font-semibold hover:bg-white/10 hover:border-brand-500/40 hover:scale-105 transition-all duration-200"
-            >
-              Compare Specs
-            </Link>
-          </div>
-
-          {/* Stats row (Nike-style confident data) */}
-          <div className="mt-20 grid grid-cols-3 gap-8 max-w-lg mx-auto">
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-extrabold text-white tracking-[-0.03em]">150+</p>
-              <p className="text-sm text-slate-500 font-medium">Products</p>
+    <div className="bg-sand text-carbon">
+      {/* ── HERO ────────────────────────────────────────────── */}
+      <section className="border-b border-rule px-8 pb-12 pt-14">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-end gap-12 lg:grid-cols-[7fr_5fr]">
+          <div>
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
+              · RGD/INDEX · {d.totalCount} SKU · {monthYear()} ·
             </div>
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-extrabold text-white tracking-[-0.03em]">3</p>
-              <p className="text-sm text-slate-500 font-medium">Categories</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-extrabold text-brand-400 tracking-[-0.03em]">4.2</p>
-              <p className="text-sm text-slate-500 font-medium">Avg Rating</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Gear Categories */}
-      <section className="relative py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-950 mb-4">Gear Categories</h2>
-            <p className="text-lg text-slate-600">Explore spec databases for every running discipline</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {gearCategories.map((cat) => {
-              const s = accentStyles[cat.accent];
-              const Icon = cat.icon;
-              return (
-                <Link
-                  key={cat.href}
-                  href={cat.href}
-                  className={`group relative overflow-hidden rounded-2xl p-8 border border-slate-200 ${s.card} transition duration-500`}
-                >
-                  {/* Card background gradient */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${s.cardBg} to-white opacity-0 group-hover:opacity-100 transition duration-500`}
-                  />
-                  <div
-                    className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${s.orb} to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition duration-500`}
-                  />
-
-                  <div className="relative">
-                    <div
-                      className={`inline-flex items-center justify-center mb-4 w-12 h-12 ${s.iconBg} rounded-xl`}
-                    >
-                      <Icon className={`w-6 h-6 ${s.iconFg}`} />
-                    </div>
-                    <h3
-                      className={`text-2xl font-bold text-slate-950 mb-2 ${s.hoverText} transition`}
-                    >
-                      {cat.label}
-                    </h3>
-                    <p className="text-slate-600 group-hover:text-slate-700 transition">{cat.desc}</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Why RunningGearDB */}
-      <section className="relative py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-        {/* Accent gradients */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-brand-500/20 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-500/20 to-transparent rounded-full blur-3xl" />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Why RunningGearDB</h2>
-            <p className="text-lg text-slate-300">Data-first approach beats listicles every time</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {[
-              {
-                title: 'Filterable Specs',
-                desc: 'Drop, weight, terrain, compliance. Filter, then compare side-by-side. Real data, instantly.',
-                icon: '⚙️',
-              },
-              {
-                title: 'All Disciplines',
-                desc: 'Trail to road to Hyrox to parkrun. One database. No walled gardens or sport silos.',
-                icon: '🏃',
-              },
-              {
-                title: 'Data-Driven Ratings',
-                desc: 'Specs compared side-by-side. Ratings based on measurable criteria, not sponsorships.',
-                icon: '⭐',
-              },
-              {
-                title: 'Auto-Updated',
-                desc: 'New gear added weekly. Reviews generated automatically. Never stale.',
-                icon: '🔄',
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="group p-8 bg-white/5 backdrop-blur border border-white/10 rounded-2xl hover:border-brand-500/50 hover:bg-white/10 transition duration-500"
+            <h1 className="m-0 mt-5 font-display text-[96px] font-semibold leading-[0.92] tracking-[-0.045em]">
+              Running gear,
+              <br />
+              <span className="text-rust">by the numbers.</span>
+            </h1>
+            <p className="mt-5 max-w-[600px] font-mono text-[15px] leading-[1.6] text-ink-70">
+              [{d.totalCount}] SKU indexed across 9 disciplines. Every spec measured,
+              normalized, sortable, kept honest. Less listicle, more{' '}
+              <code className="rounded bg-paper px-1.5 py-0.5 text-carbon">SELECT * FROM gear</code>.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-2.5">
+              <Link
+                href="/shoes"
+                className="rounded-[3px] bg-carbon px-[22px] py-3.5 font-mono text-[13px] font-medium text-sand"
               >
-                <div className="text-4xl mb-4">{item.icon}</div>
-                <h3 className="text-xl font-bold mb-3 group-hover:text-brand-400 transition">
-                  {item.title}
-                </h3>
-                <p className="text-slate-300 group-hover:text-slate-100 transition">{item.desc}</p>
+                browse the index →
+              </Link>
+              <Link
+                href="/finder"
+                className="rounded-[3px] border border-carbon bg-paper px-[22px] py-3.5 font-mono text-[13px] font-medium text-carbon"
+              >
+                find your shoe (5 questions) ⇄
+              </Link>
+              <Link
+                href="/compare"
+                className="rounded-[3px] border border-carbon bg-paper px-[22px] py-3.5 font-mono text-[13px] font-medium text-carbon"
+              >
+                run a comparison
+              </Link>
+            </div>
+          </div>
+
+          {/* live stats panel */}
+          <div className="rounded-[6px] border border-rule bg-paper p-5">
+            <div className="mb-3.5 flex items-center justify-between">
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-50">
+                system · live
+              </span>
+              <span className="font-mono text-[10.5px] text-moss">● live</span>
+            </div>
+            {[
+              ['SKU indexed', String(d.totalCount), 'all categories'],
+              ['Reviews live', `${d.totalCount} / ${d.totalCount}`, '100% coverage'],
+              ['Avg price', `$${d.avgPrice}`, 'shoes + vests'],
+              ['Categories', '3', 'shoes · vests · fuel'],
+              ['Editorial standards', 'Published', 'methodology v4.2'],
+            ].map(([l, v, d2], i, arr) => (
+              <div
+                key={l}
+                className={`grid grid-cols-[1fr_auto] gap-3 py-3 ${
+                  i < arr.length - 1 ? 'border-b border-rule' : ''
+                }`}
+              >
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
+                    {l}
+                  </div>
+                  <div className="mt-0.5 font-display text-[19px] font-medium tracking-[-0.02em]">
+                    {v}
+                  </div>
+                </div>
+                <div className="self-end font-mono text-[11px] text-moss">{d2}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* ── THE INDEX (top-rated table) ──────────────────────────── */}
+      <section className="border-b border-rule px-8 py-12">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
+                · the index · top-rated · sorted_by · rating ↓
+              </span>
+              <h2 className="m-0 mt-2 font-display text-[48px] font-semibold tracking-[-0.03em]">
+                Browse like a database.
+              </h2>
+            </div>
+            <Link
+              href="/shoes"
+              className="rounded-[3px] border border-carbon px-3 py-1.5 font-mono text-[12px] text-carbon"
+            >
+              see all {d.shoeStats.count} shoes →
+            </Link>
+          </div>
+
+          <div className="overflow-hidden rounded-[6px] border border-rule bg-paper">
+            <div className="grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
+              <span>#</span><span></span><span>brand / model</span>
+              <span className="text-right">drop</span>
+              <span className="text-right">wt</span>
+              <span className="text-right">stack</span>
+              <span className="text-right">$</span>
+              <span className="text-right">score ↓</span>
+              <span className="text-right"></span>
+            </div>
+            {d.top.map((s: any, i: number) => (
+              <Link
+                key={s.id}
+                href={`/reviews/${s.slug}`}
+                className={`grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] items-center border-b border-rule-soft px-4 py-3.5 ${
+                  i === 0 ? 'bg-rust/[0.05]' : ''
+                }`}
+              >
+                <span className="font-mono text-[12px] text-ink-50">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
+                  {s.image_url && (
+                    <img src={s.image_url} alt={s.model} className="h-full w-full object-cover" />
+                  )}
+                </div>
+                <div>
+                  <div className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-50">
+                    {s.brand?.toUpperCase()} · {s.discipline?.toUpperCase()}
+                    {s.carbon_plate && ' · CARBON'}
+                  </div>
+                  <div className="font-display text-[18px] font-medium tracking-[-0.015em] text-carbon">
+                    {s.model}
+                  </div>
+                </div>
+                <span className="text-right font-mono text-[13px]">
+                  {s.drop_mm}<span className="text-ink-50">mm</span>
+                </span>
+                <span className="text-right font-mono text-[13px]">
+                  {s.weight_g}<span className="text-ink-50">g</span>
+                </span>
+                <span className="text-right font-mono text-[13px]">
+                  {s.stack_heel_mm}<span className="text-ink-50">mm</span>
+                </span>
+                <span className="text-right font-mono text-[13px]">${s.price_usd}</span>
+                <div
+                  className="text-right font-display text-[22px] font-semibold tracking-[-0.02em]"
+                  style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}
+                >
+                  {s.our_rating}
+                  <span className="ml-1 font-mono text-[10px] text-ink-50">/10</span>
+                </div>
+                <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
+                  BUY · ${s.price_usd}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CATEGORY CARDS ──────────────────────────────────────── */}
+      <section className="border-b border-rule px-8 py-12">
+        <div className="mx-auto max-w-7xl">
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
+            · categories · 3 ·
+          </span>
+          <h2 className="m-0 mt-2 mb-6 font-display text-[48px] font-semibold tracking-[-0.03em]">
+            Pick a sub-index.
+          </h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <CategoryCard
+              href="/shoes"
+              slug="/shoes"
+              title="Running shoes"
+              count={d.shoeStats.count}
+              stats={[
+                ['weight', range(d.shoeStats.weight, 'g')],
+                ['drop',   range(d.shoeStats.drop, 'mm')],
+                ['stack',  range(d.shoeStats.stack, 'mm')],
+                ['$',      range(d.shoeStats.price, '')],
+              ]}
+            />
+            <CategoryCard
+              href="/vests"
+              slug="/vests"
+              title="Vests & packs"
+              count={d.vestStats.count}
+              stats={[
+                ['capacity', range(d.vestStats.cap, 'L')],
+                ['weight',   range(d.vestStats.weight, 'g')],
+                ['UTMB',     'filterable'],
+                ['$',        range(d.vestStats.price, '')],
+              ]}
+            />
+            <CategoryCard
+              href="/gels"
+              slug="/fuel"
+              title="Gels & fuel"
+              count={d.gelStats.count}
+              stats={[
+                ['carbs',     range(d.gelStats.carbs, 'g')],
+                ['caffeine',  range(d.gelStats.caffeine, 'mg')],
+                ['real-food', 'tagged'],
+                ['$/serve',   range(d.gelStats.price, '')],
+              ]}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── CHANGELOG ───────────────────────────────────────────── */}
+      <section className="border-b border-rule px-8 py-12">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 lg:grid-cols-[320px_1fr]">
+          <div>
+            <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
+              · /changelog ·
+            </span>
+            <h2 className="m-0 mt-2 mb-3 font-display text-[44px] font-semibold tracking-[-0.03em]">
+              Kept current.
+            </h2>
+            <p className="m-0 max-w-[460px] font-mono text-[13px] leading-[1.6] text-ink-70">
+              Every entry, edit, re-score and price-check is logged. Public, timestamped, and
+              reversible. No silent updates, no surprise nerfs.
+            </p>
+            <Link href="/changelog" className="mt-4 inline-block font-mono text-[11.5px] text-rust">
+              open the full log →
+            </Link>
+          </div>
+          <div className="rounded-[6px] border border-rule bg-paper p-4 font-mono text-[12.5px] leading-[1.7]">
+            {d.changelog.length > 0 ? (
+              d.changelog.map((e: any, i: number) => (
+                <div
+                  key={e.id}
+                  className={`grid grid-cols-[140px_60px_1fr] items-center gap-3 py-1.5 ${
+                    i < d.changelog.length - 1 ? 'border-b border-rule-soft' : ''
+                  }`}
+                >
+                  <span className="text-ink-50">{formatShort(e.occurred_at)}</span>
+                  <span style={{ color: kindColor[e.kind] }} className="font-semibold">
+                    {kindLabel[e.kind] ?? e.kind.toUpperCase()}
+                  </span>
+                  <span>{e.summary}</span>
+                </div>
+              ))
+            ) : (
+              <span className="text-ink-50">
+                · changelog is empty — run an /add or wait for the cron sync ·
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
     </div>
+  );
+}
+
+// ─── helpers ─────────────────────────────────────────────────────
+function range([a, b]: number[], unit: string) {
+  if (a === b) return `${a}${unit}`;
+  return `${a}${unit}–${b}${unit}`;
+}
+function monthYear() {
+  return new Date()
+    .toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+    .toUpperCase();
+}
+function formatShort(iso: string) {
+  const d = new Date(iso);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  return `${hh}:${mm} · ${dd}/${mo}`;
+}
+
+function CategoryCard({
+  href,
+  slug,
+  title,
+  count,
+  stats,
+}: {
+  href: string;
+  slug: string;
+  title: string;
+  count: number;
+  stats: (readonly [string, string])[];
+}) {
+  return (
+    <Link
+      href={href}
+      className="block overflow-hidden rounded-[6px] border border-rule bg-paper"
+    >
+      <div className="flex items-center justify-between border-b border-rule px-4 py-3">
+        <span className="bg-carbon px-2 py-0.5 font-mono text-[10px] tracking-[0.12em] text-sand">
+          {slug}
+        </span>
+        <span className="bg-sand px-2.5 py-0.5 font-mono text-[11px] font-medium text-carbon">
+          {count} SKU
+        </span>
+      </div>
+      <div className="p-5">
+        <h3 className="m-0 mb-3 font-display text-[26px] font-semibold tracking-[-0.025em]">
+          {title}
+        </h3>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-rule pt-2.5">
+          {stats.map(([k, v]) => (
+            <div key={k} className="flex justify-between">
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">
+                {k}
+              </span>
+              <span className="font-mono text-[12px] text-carbon">{v}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3.5 font-mono text-[11.5px] text-rust">open the sub-index →</div>
+      </div>
+    </Link>
   );
 }

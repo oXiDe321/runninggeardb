@@ -18,7 +18,7 @@ export default async function ComparePage() {
     <div className="w-full">
       {/* Header */}
       <section className="relative py-16 bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 border-b border-slate-200 dark:border-white/10">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-brand-200/20 dark:from-brand-500/5 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-sand-deep/20 dark:from-rust/5 to-transparent rounded-full blur-3xl" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-5xl font-bold text-slate-950 dark:text-white mb-2">Compare Gear</h1>
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">

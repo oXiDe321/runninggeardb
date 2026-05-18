@@ -38,6 +38,27 @@ export type Database = {
           amazon_url: string | null;
           image_url: string | null;
           created_at: string;
+          // E-E-A-T (003)
+          tester_id: string | null;
+          in_house_weight_g: number | null;
+          miles_tested: number | null;
+          weeks_tested: number | null;
+          test_terrain: string | null;
+          best_for: string[] | null;
+          not_for: string[] | null;
+          score_grip: number | null;
+          score_comfort: number | null;
+          score_weight: number | null;
+          score_durability: number | null;
+          score_value: number | null;
+          score_fit: number | null;
+          ai_drafted_at: string | null;
+          human_edited_at: string | null;
+          human_editor_id: string | null;
+          peer_reviewer_count: number;
+          released_at: string | null;
+          msrp_usd: number | null;
+          tagline: string | null;
         };
       };
       vests: {
@@ -66,6 +87,16 @@ export type Database = {
           amazon_url: string | null;
           image_url: string | null;
           created_at: string;
+          // E-E-A-T (003)
+          tester_id: string | null;
+          in_house_weight_g: number | null;
+          miles_tested: number | null;
+          best_for: string[] | null;
+          not_for: string[] | null;
+          ai_drafted_at: string | null;
+          human_edited_at: string | null;
+          human_editor_id: string | null;
+          tagline: string | null;
         };
       };
       gels: {
@@ -91,6 +122,15 @@ export type Database = {
           amazon_url: string | null;
           image_url: string | null;
           created_at: string;
+          // E-E-A-T (003)
+          tester_id: string | null;
+          servings_tested: number | null;
+          best_for: string[] | null;
+          not_for: string[] | null;
+          ai_drafted_at: string | null;
+          human_edited_at: string | null;
+          human_editor_id: string | null;
+          tagline: string | null;
         };
       };
       blog_posts: {
@@ -105,6 +145,82 @@ export type Database = {
           published_at: string | null;
           generated_at: string | null;
           created_at: string;
+        };
+      };
+      testers: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          title: string | null;
+          bio: string | null;
+          avatar_url: string | null;
+          miles_logged_lifetime: number;
+          credentials: string[] | null;
+          strava_url: string | null;
+          linkedin_url: string | null;
+          joined_at: string | null;
+          active: boolean;
+          created_at: string;
+        };
+      };
+      retailer_prices: {
+        Row: {
+          id: string;
+          product_table: 'shoes' | 'vests' | 'gels';
+          product_id: string;
+          retailer: string;
+          price_usd: number;
+          url: string;
+          in_stock: boolean;
+          stock_label: string | null;
+          checked_at: string;
+        };
+      };
+      price_history: {
+        Row: {
+          id: string;
+          product_table: 'shoes' | 'vests' | 'gels';
+          product_id: string;
+          retailer: string;
+          price_usd: number;
+          observed_on: string;
+        };
+      };
+      community_quotes: {
+        Row: {
+          id: string;
+          product_table: 'shoes' | 'vests' | 'gels';
+          product_id: string;
+          source: string;
+          source_url: string | null;
+          user_handle: string | null;
+          body: string;
+          votes: string | null;
+          sentiment: number | null;
+          captured_at: string;
+          display_order: number;
+        };
+      };
+      review_faqs: {
+        Row: {
+          id: string;
+          product_table: 'shoes' | 'vests' | 'gels';
+          product_id: string;
+          question: string;
+          answer: string;
+          display_order: number;
+        };
+      };
+      changelog: {
+        Row: {
+          id: string;
+          occurred_at: string;
+          kind: 'add' | 'update' | 'price' | 'review' | 'remove';
+          product_table: string | null;
+          product_id: string | null;
+          summary: string;
+          actor: string | null;
         };
       };
     };

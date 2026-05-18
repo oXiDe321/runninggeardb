@@ -13,8 +13,8 @@ export default function ShoesPage() {
       title="Running Shoes"
       description="Trail, road, Hyrox, parkrun. Filter by discipline, drop, weight, and more to find your perfect shoe."
       category="shoes"
-      accent="orange"
       table="shoes"
+      slug="/shoes"
     />
   );
 }

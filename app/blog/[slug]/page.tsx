@@ -9,7 +9,7 @@ interface PageProps {
 }
 
 const categoryStyles: Record<string, string> = {
-  guide: 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300',
+  guide: 'bg-sand text-rust-deep dark:bg-carbon-80/40 dark:text-rust',
   comparison: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   race: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
   nutrition: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
@@ -110,7 +110,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     <div className="w-full">
       {/* Header */}
       <section className="relative py-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b border-white/10">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-brand-500/10 to-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-rust/10 to-purple-500/10 rounded-full blur-3xl" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-4">
             <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${categoryStyles[category] || categoryStyles.guide}`}>
@@ -142,14 +142,14 @@ export default async function BlogPostPage({ params }: PageProps) {
           prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
           prose-p:text-lg prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4
           prose-li:text-slate-600 dark:prose-li:text-slate-300
-          prose-a:text-brand-600 dark:prose-a:text-brand-400 prose-a:no-underline hover:prose-a:underline
+          prose-a:text-rust prose-a:no-underline hover:prose-a:underline
           prose-strong:text-slate-950 dark:prose-strong:text-white prose-strong:font-semibold
           prose-table:rounded-xl prose-table:overflow-hidden
           prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-th:px-4 prose-th:py-2 prose-th:text-sm prose-th:font-semibold
           prose-td:px-4 prose-td:py-2 prose-td:text-sm prose-td:border-b prose-td:border-slate-100 dark:prose-td:border-white/5
           prose-thead:border-b prose-thead:border-slate-200 dark:prose-thead:border-white/10
           prose-code:bg-slate-100 dark:prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-          prose-blockquote:border-l-brand-500 prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-800/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
+          prose-blockquote:border-l-rust prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-800/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
         ">
           {post.content ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -167,7 +167,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             Compare specs yourself
           </h3>
           <div className="flex flex-wrap gap-3">
-            <Link href="/shoes" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-full font-medium text-sm hover:bg-brand-700 dark:hover:bg-brand-500 transition-colors">
+            <Link href="/shoes" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-full font-medium text-sm hover:bg-rust-deep dark:hover:bg-rust transition-colors">
               Browse Shoes
             </Link>
             <Link href="/vests" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full font-medium text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">

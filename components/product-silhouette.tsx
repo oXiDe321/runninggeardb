@@ -5,7 +5,7 @@ export default function ProductSilhouette({
 }) {
   const accent =
     category === 'shoes'
-      ? 'text-brand-200 dark:text-brand-800'
+      ? 'text-sand-deep dark:text-carbon-80'
       : category === 'vests'
         ? 'text-blue-200 dark:text-blue-800'
         : 'text-emerald-200 dark:text-emerald-800';

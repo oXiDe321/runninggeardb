@@ -13,8 +13,8 @@ export default function VestsPage() {
       title="Running Vests & Packs"
       description="UTMB compliant, ultra-rated. Filter by capacity, weight, compliance, and find your perfect pack."
       category="vests"
-      accent="blue"
       table="vests"
+      slug="/vests"
     />
   );
 }

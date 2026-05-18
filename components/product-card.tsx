@@ -7,8 +7,8 @@ interface ProductCardProps {
 
 const categoryAccents = {
   shoes: {
-    strip: 'bg-gradient-to-r from-brand-500 to-red-500',
-    badge: 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300',
+    strip: 'bg-gradient-to-r from-rust to-rust-deep',
+    badge: 'bg-sand text-rust-deep dark:bg-carbon-80/40 dark:text-rust',
   },
   vests: {
     strip: 'bg-gradient-to-r from-blue-500 to-blue-400',
@@ -107,7 +107,7 @@ export default function ProductCard({ product, category }: ProductCardProps) {
             href={amazonUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full text-center px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:bg-brand-700 dark:hover:bg-brand-500 interactive"
+            className="block w-full text-center px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:bg-rust-deep dark:hover:bg-rust interactive"
           >
             Buy on Amazon
           </a>
