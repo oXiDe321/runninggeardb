@@ -5,6 +5,7 @@
 // No client-side Supabase query — the server component handles freshness.
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 
 interface Shoe {
   id: string;
@@ -301,12 +302,14 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
                   className="grid grid-cols-[56px_1fr_44px] items-center gap-3 rounded-[3px] p-2.5"
                   style={i === 0 ? { background: 'rgba(196,88,44,0.06)' } : undefined}
                 >
-                  <div className="h-14 w-14 overflow-hidden rounded-[3px] bg-sand-deep">
+                  <div className="relative h-14 w-14 overflow-hidden rounded-[3px] bg-sand-deep">
                     {s.image_url && (
-                      <img
+                      <Image
                         src={s.image_url}
                         alt={s.model}
-                        className="h-full w-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="56px"
                       />
                     )}
                   </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Fuse from 'fuse.js';
 import type { SearchResult } from '@/lib/search-data';
@@ -159,12 +160,14 @@ export default function SearchPalette({
                 onClick={() => navigate(r.slug, r.kind)}
               >
                 {/* Thumbnail */}
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[2px] bg-sand-deep">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[2px] bg-sand-deep">
                   {r.image_url && (
-                    <img
+                    <Image
                       src={r.image_url}
                       alt={r.model}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="40px"
                     />
                   )}
                 </div>

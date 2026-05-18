@@ -2,6 +2,7 @@
 // Server component: live SKU counts, top-12 table, category cards,
 // changelog feed + recent price changes.
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
@@ -216,9 +217,9 @@ export default async function HomePage() {
                 <span className="font-mono text-[12px] text-ink-50">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <div className="h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
+                <div className="relative h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
                   {s.image_url && (
-                    <img src={s.image_url} alt={s.model} className="h-full w-full object-cover" />
+                    <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="44px" />
                   )}
                 </div>
                 <div>

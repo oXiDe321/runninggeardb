@@ -4,6 +4,7 @@
 // driven by SPEC_COLUMNS config.
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
 
@@ -250,9 +251,9 @@ function UnifiedTable({
             <span className="font-mono text-[12px] text-ink-50">
               {String(i + 1).padStart(2, '0')}
             </span>
-            <div className="h-12 w-12 overflow-hidden rounded-[3px] bg-sand-deep">
+            <div className="relative h-12 w-12 overflow-hidden rounded-[3px] bg-sand-deep">
               {p.image_url && (
-                <img src={p.image_url} alt={modelName} className="h-full w-full object-cover" />
+                <Image src={p.image_url} alt={modelName} fill className="object-cover" sizes="48px" />
               )}
             </div>
             <div>
@@ -394,9 +395,9 @@ function ProductCard({ product, category }: { product: Product; category: Catego
       href={category === 'shoes' ? `/reviews/${product.slug}` : `/${category === 'vests' ? 'vests' : 'gels'}?highlight=${product.slug}`}
       className="block overflow-hidden rounded border border-rule bg-paper no-underline"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-sand-deep">
+      <div className="relative aspect-[4/3] overflow-hidden bg-sand-deep">
         {product.image_url && (
-          <img src={product.image_url} alt={name} className="h-full w-full object-cover" />
+          <Image src={product.image_url} alt={name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
         )}
       </div>
       <div className="p-4">

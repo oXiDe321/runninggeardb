@@ -4,6 +4,7 @@
 // Slides up once the user scrolls past the hero (~600px in).
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { affiliateUrl } from '@/lib/amazon';
 
 interface Props {
@@ -44,8 +45,8 @@ export default function StickyBuyBar({
     >
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-8 py-3.5">
         {image && (
-          <div className="h-12 w-12 overflow-hidden rounded-[3px]">
-            <img src={image} alt="" className="h-full w-full object-cover" />
+          <div className="relative h-12 w-12 overflow-hidden rounded-[3px]">
+            <Image src={image} alt="" fill className="object-cover" sizes="48px" />
           </div>
         )}
         <div className="flex-1">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import PriceSparkline from '@/components/price-sparkline';
 import type { ProductPrice, PriceHistoryPoint } from '@/lib/price-data';
@@ -121,9 +122,9 @@ export default function PriceTable({ products }: { products: ProductPrice[] }) {
               <span className="font-mono text-[12px] text-ink-50">
                 {String(i + 1).padStart(2, '0')}
               </span>
-              <div className="h-10 w-10 overflow-hidden rounded-[2px] bg-sand-deep">
+              <div className="relative h-10 w-10 overflow-hidden rounded-[2px] bg-sand-deep">
                 {p.image_url && (
-                  <img src={p.image_url} alt={p.model} className="h-full w-full object-cover" />
+                  <Image src={p.image_url} alt={p.model} fill className="object-cover" sizes="40px" />
                 )}
               </div>
               <div>
