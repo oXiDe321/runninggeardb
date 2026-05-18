@@ -74,5 +74,4 @@ export const AMAZON_ENRICHMENT: Record<string, { asin: string; image_id: string 
   'altra-lone-peak-8': { asin: 'B0CPN2RLN3', image_id: '511H6LMtMhL' },
   'altra-olympus-6': { asin: 'B0CPRB16ML', image_id: '61b5My51xQL' },
   'on-cloudultra-2': { asin: 'B0CN8ZVDG1', image_id: '61UdsdMl56L' },
-  'bd-distance-4': { asin: 'B078C75425', image_id: '41rM4USAa3L' },
 };
