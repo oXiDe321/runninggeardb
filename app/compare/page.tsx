@@ -17,11 +17,11 @@ export default async function ComparePage() {
   return (
     <div className="w-full">
       {/* Header */}
-      <section className="relative py-16 bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 border-b border-slate-200 dark:border-white/10">
+      <section className="relative py-16 bg-paper border-b border-rule">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-sand-deep/20 dark:from-rust/5 to-transparent rounded-full blur-3xl" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-5xl font-bold text-slate-950 dark:text-white mb-2">Compare Gear</h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
+          <h1 className="text-5xl font-bold text-carbon mb-2">Compare Gear</h1>
+          <p className="text-lg text-ink-50 max-w-2xl">
             Select 2-4 products to compare specs side-by-side. Best values highlighted automatically.
           </p>
         </div>

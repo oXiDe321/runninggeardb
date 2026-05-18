@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { X, Plus, ArrowLeftRight } from 'lucide-react';
 
 interface Product {
@@ -71,10 +71,10 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
           <button
             key={cat}
             onClick={() => { setCategory(cat); setSelected([]); }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 ${
+            className={`px-4 py-2 font-mono text-[11px] tracking-wider uppercase transition-all duration-150 border border-transparent ${
               category === cat
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ? 'bg-rust text-white border-rust'
+                : 'bg-paper text-ink-50 border-rule hover:border-carbon hover:text-carbon'
             }`}
           >
             {categoryLabels[cat]}
@@ -85,10 +85,10 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Product picker */}
         <div className="lg:col-span-1">
-          <h3 className="text-sm font-semibold text-slate-950 dark:text-white uppercase tracking-wider mb-3">
+          <h3 className="text-[10px] font-semibold text-ink-30 font-mono uppercase tracking-[0.16em] mb-3">
             Select products ({selected.length}/4)
           </h3>
-          <div className="space-y-1 max-h-[500px] overflow-y-auto rounded-xl border border-slate-200 dark:border-white/10">
+          <div className="space-y-px border border-rule rounded overflow-y-auto max-h-[500px]">
             {products.map((product) => {
               const isSelected = selected.some((p) => p.id === product.id);
               return (
@@ -97,18 +97,18 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                   onClick={() => toggleProduct(product)}
                   className={`w-full text-left px-4 py-3 flex items-center justify-between transition-colors ${
                     isSelected
-                      ? 'bg-sand dark:bg-carbon-80/30 border-l-2 border-rust'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-l-2 border-transparent'
+                      ? 'bg-sand border-l-2 border-rust'
+                      : 'hover:bg-paper border-l-2 border-transparent'
                   }`}
                 >
                   <div>
-                    <p className="text-sm font-medium text-slate-950 dark:text-white">{product.brand}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{product.model || product.product}</p>
+                    <p className="text-sm font-medium text-carbon">{product.brand}</p>
+                    <p className="text-xs text-ink-30">{product.model || product.product}</p>
                   </div>
                   {isSelected ? (
                     <X className="w-4 h-4 text-rust" />
                   ) : (
-                    <Plus className="w-4 h-4 text-slate-400" />
+                    <Plus className="w-4 h-4 text-ink-30" />
                   )}
                 </button>
               );
@@ -119,24 +119,24 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
         {/* Comparison table */}
         <div className="lg:col-span-2">
           {selected.length < 2 ? (
-            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl text-center">
-              <ArrowLeftRight className="w-10 h-10 text-slate-300 dark:text-slate-600 mb-3" />
-              <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">Select 2-4 products to compare</p>
-              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Pick from the list on the left</p>
+            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-rule rounded-2xl text-center">
+              <ArrowLeftRight className="w-10 h-10 text-ink-30 mb-3" />
+              <p className="text-ink-50 text-lg font-medium">Select 2-4 products to compare</p>
+              <p className="text-sm text-ink-30 mt-1">Pick from the list on the left</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
+            <div className="overflow-x-auto rounded border border-rule">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50">
-                    <th className="text-left py-3 px-4 font-semibold text-slate-950 dark:text-white sticky left-0 bg-slate-50 dark:bg-slate-800/50 z-10">
+                  <tr className="bg-sand">
+                    <th className="text-left py-3 px-4 font-semibold text-carbon sticky left-0 bg-sand z-10 font-mono text-[10px] uppercase tracking-[0.12em]">
                       Spec
                     </th>
                     {selected.map((product) => (
-                      <th key={product.id} className="text-center py-3 px-4 font-semibold text-slate-950 dark:text-white min-w-[140px]">
+                      <th key={product.id} className="text-center py-3 px-4 font-semibold text-carbon min-w-[140px]">
                         <div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">{product.brand}</p>
-                          <p>{product.model || product.product}</p>
+                          <p className="text-[10px] text-ink-30 font-normal font-mono">{product.brand}</p>
+                          <p className="font-mono text-[11px]">{product.model || product.product}</p>
                         </div>
                       </th>
                     ))}
@@ -144,14 +144,13 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                 </thead>
                 <tbody>
                   {specs.map((spec, i) => (
-                    <tr key={spec.key} className={i % 2 === 0 ? 'bg-white dark:bg-slate-950' : 'bg-slate-50/50 dark:bg-slate-900/50'}>
-                      <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300 sticky left-0 bg-inherit">
+                    <tr key={spec.key} className={i % 2 === 0 ? 'bg-white dark:bg-carbon' : 'bg-paper/50 dark:bg-carbon-80/50'}>
+                      <td className="py-3 px-4 font-mono text-[11px] text-ink-70 sticky left-0 bg-inherit">
                         {spec.label}
                       </td>
                       {selected.map((product) => {
                         const val = product[spec.key];
                         const display = val != null ? (spec.format ? spec.format(val) : String(val)) : '—';
-                        // Highlight best-in-row for numeric specs
                         const numericVal = typeof val === 'number' ? val : null;
                         const isBest = numericVal !== null && spec.key !== 'price_usd'
                           ? selected.every((p) => {
@@ -168,10 +167,10 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                         return (
                           <td
                             key={product.id}
-                            className={`text-center py-3 px-4 font-mono ${
+                            className={`text-center py-3 px-4 font-mono text-[12px] ${
                               isBest
                                 ? 'text-rust font-semibold'
-                                : 'text-slate-600 dark:text-slate-400'
+                                : 'text-ink-50'
                             }`}
                           >
                             {display}
@@ -181,8 +180,8 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                     </tr>
                   ))}
                   {/* Buy row */}
-                  <tr className="border-t-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50">
-                    <td className="py-3 px-4 font-semibold text-slate-950 dark:text-white sticky left-0 bg-slate-50 dark:bg-slate-800/50">
+                  <tr className="border-t-2 border-rule bg-sand">
+                    <td className="py-3 px-4 font-semibold text-carbon sticky left-0 bg-sand font-mono text-[10px] uppercase tracking-[0.12em]">
                       Buy
                     </td>
                     {selected.map((product) => (
@@ -192,12 +191,12 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                             href={product.amazon_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold hover:bg-rust-deep dark:hover:bg-rust transition-colors"
+                            className="inline-block px-4 py-1.5 bg-rust text-white font-mono text-[11px] font-semibold hover:bg-rust-deep transition-colors"
                           >
                             View on Amazon
                           </a>
                         ) : (
-                          <span className="text-slate-400 text-xs">—</span>
+                          <span className="text-ink-30 text-xs">—</span>
                         )}
                       </td>
                     ))}
