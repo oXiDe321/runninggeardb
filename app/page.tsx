@@ -197,8 +197,9 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto rounded-[6px] border border-rule bg-paper">
-            <div className="grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50" style={{minWidth:'660px'}}>
+          <div className="rounded-[6px] border border-rule bg-paper">
+            {/* Desktop header */}
+            <div className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_90px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
               <span>#</span><span /><span>brand / model</span>
               <span className="text-right">drop</span>
               <span className="text-right">wt</span>
@@ -208,52 +209,58 @@ export default async function HomePage() {
               <span className="text-right" />
             </div>
             {d.top.map((s: any, i: number) => (
-              <Link
-                key={s.id}
-                href={`/reviews/${s.slug}`}
-                style={{ minWidth: '660px' }}
-                className={`grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] items-center border-b border-rule-soft px-4 py-3.5 last:border-0 ${
-                  i === 0 ? 'bg-rust/[0.05]' : ''
-                }`}
-              >
-                <span className="font-mono text-[12px] text-ink-50">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <div className="relative h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
-                  {s.image_url && (
-                    <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="44px" />
-                  )}
-                </div>
-                <div>
-                  <div className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-50">
-                    {s.brand?.toUpperCase()} · {s.discipline?.toUpperCase()}
-                    {s.carbon_plate && ' · CARBON'}
+              <div key={s.id} className={`border-b border-rule-soft last:border-0${i === 0 ? ' bg-rust/[0.05]' : ''}`}>
+
+                {/* Mobile row */}
+                <Link href={`/reviews/${s.slug}`} className="flex items-center gap-3 px-3 py-3 no-underline md:hidden">
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[3px] bg-sand-deep">
+                    {s.image_url && <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="56px" />}
                   </div>
-                  <div className="font-display text-[18px] font-medium tracking-[-0.015em] text-carbon">
-                    {s.model}
+                  <div className="min-w-0 flex-1">
+                    <div className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-50">
+                      {s.brand?.toUpperCase()} · {s.discipline?.toUpperCase()}{s.carbon_plate && ' · ◆'}
+                    </div>
+                    <div className="truncate font-display text-[16px] font-medium tracking-[-0.015em] text-carbon">{s.model}</div>
+                    <div className="mt-0.5 font-mono text-[10px] text-ink-50">
+                      {s.drop_mm}mm · {s.weight_g}g · <PriceDisplay usd={s.price_usd} />
+                    </div>
                   </div>
-                </div>
-                <span className="text-right font-mono text-[13px]">
-                  {s.drop_mm}<span className="text-ink-50">mm</span>
-                </span>
-                <span className="text-right font-mono text-[13px]">
-                  {s.weight_g}<span className="text-ink-50">g</span>
-                </span>
-                <span className="text-right font-mono text-[13px]">
-                  {s.stack_heel_mm}<span className="text-ink-50">mm</span>
-                </span>
-                <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
-                <div
-                  className="text-right font-display text-[22px] font-semibold tracking-[-0.02em]"
-                  style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    <div className="font-display text-[20px] font-semibold tracking-[-0.02em]" style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
+                      {s.our_rating}<span className="font-mono text-[9px] text-ink-50">/10</span>
+                    </div>
+                    <span className="rounded-[3px] bg-carbon px-2.5 py-1 font-mono text-[10px] text-sand">BUY →</span>
+                  </div>
+                </Link>
+
+                {/* Desktop row */}
+                <Link
+                  href={`/reviews/${s.slug}`}
+                  className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_90px_120px] items-center gap-3 px-4 py-3.5 no-underline"
                 >
-                  {s.our_rating}
-                  <span className="ml-1 font-mono text-[10px] text-ink-50">/10</span>
-                </div>
-                <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
-                  BUY · <PriceDisplay usd={s.price_usd} />
-                </span>
-              </Link>
+                  <span className="font-mono text-[12px] text-ink-50">{String(i + 1).padStart(2, '0')}</span>
+                  <div className="relative h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
+                    {s.image_url && <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="44px" />}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-50">
+                      {s.brand?.toUpperCase()} · {s.discipline?.toUpperCase()}{s.carbon_plate && ' · CARBON'}
+                    </div>
+                    <div className="truncate font-display text-[18px] font-medium tracking-[-0.015em] text-carbon">{s.model}</div>
+                  </div>
+                  <span className="text-right font-mono text-[13px]">{s.drop_mm}<span className="text-ink-50">mm</span></span>
+                  <span className="text-right font-mono text-[13px]">{s.weight_g}<span className="text-ink-50">g</span></span>
+                  <span className="text-right font-mono text-[13px]">{s.stack_heel_mm}<span className="text-ink-50">mm</span></span>
+                  <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
+                  <div className="text-right font-display text-[22px] font-semibold tracking-[-0.02em]" style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
+                    {s.our_rating}<span className="ml-1 font-mono text-[10px] text-ink-50">/10</span>
+                  </div>
+                  <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
+                    BUY · <PriceDisplay usd={s.price_usd} />
+                  </span>
+                </Link>
+
+              </div>
             ))}
           </div>
         </div>

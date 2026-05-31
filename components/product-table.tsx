@@ -208,21 +208,44 @@ function UnifiedTable({
 }) {
   const { fmt, symbol } = useCurrency();
   const colWidths = cols.map((c) => c.width).join(' ');
-  const gridCols = `40px 60px 2fr ${colWidths} 90px 130px`;
+  const desktopGridCols = `40px 56px 2fr ${colWidths} 90px 120px`;
 
-  // Update the $ column header label to reflect current currency symbol
   const displayCols = cols.map((c) =>
     c.key === 'price_usd' || c.key === 'price_per_serving'
       ? { ...c, label: c.key === 'price_per_serving' ? `${symbol}/srv` : symbol }
       : c
   );
 
+  // Spec pills for mobile summary line
+  function specPills(p: Product) {
+    if (category === 'shoes') {
+      return [
+        p.drop_mm != null ? `${p.drop_mm}mm drop` : null,
+        p.weight_g != null ? `${p.weight_g}g` : null,
+        fmt(p.price_usd),
+      ].filter(Boolean).join(' · ');
+    }
+    if (category === 'vests') {
+      return [
+        p.capacity_l != null ? `${p.capacity_l}L` : null,
+        p.weight_g != null ? `${p.weight_g}g` : null,
+        fmt(p.price_usd),
+      ].filter(Boolean).join(' · ');
+    }
+    // gels
+    return [
+      p.carbs_per_serving_g != null ? `${p.carbs_per_serving_g}g carbs` : null,
+      p.caffeine_mg ? `${p.caffeine_mg}mg caf` : null,
+      fmt(p.price_per_serving),
+    ].filter(Boolean).join(' · ');
+  }
+
   return (
     <>
-      {/* Header */}
+      {/* ── Desktop header (hidden on mobile) ── */}
       <div
-        className="grid items-center gap-3 border-b border-rule bg-sand-deep px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50"
-        style={{ gridTemplateColumns: gridCols }}
+        className="hidden md:grid items-center gap-3 border-b border-rule bg-sand-deep px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50"
+        style={{ gridTemplateColumns: desktopGridCols }}
       >
         <span>#</span>
         <span />
@@ -240,6 +263,19 @@ function UnifiedTable({
         <span className="text-right">buy</span>
       </div>
 
+      {/* ── Mobile sort header ── */}
+      <div className="md:hidden flex items-center justify-between border-b border-rule bg-sand-deep px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
+        <TH k={category === 'gels' ? 'product' : 'model'} sort={sort} setSort={setSort}>
+          brand / {category === 'gels' ? 'product' : 'model'}
+        </TH>
+        <div className="flex items-center gap-3">
+          <TH k="our_rating" align="right" sort={sort} setSort={setSort}>score</TH>
+          <TH k={category === 'gels' ? 'price_per_serving' : 'price_usd'} align="right" sort={sort} setSort={setSort}>
+            {symbol}
+          </TH>
+        </div>
+      </div>
+
       {/* Rows */}
       {rows.map((p, i) => {
         const modelName = category === 'gels' ? p.product : p.model;
@@ -247,61 +283,100 @@ function UnifiedTable({
         const buyHref = p.amazon_url && p.amazon_url !== 'https://amazon.com'
           ? affiliateUrl(p.amazon_url)
           : amazonSearchUrl(p.brand, modelName);
+        const rowHref = category === 'shoes'
+          ? `/reviews/${p.slug}`
+          : `/${category === 'vests' ? 'vests' : 'gels'}?highlight=${p.slug}`;
+        const rowBg = i % 2 === 1 ? ' bg-sand-deep/40' : '';
+
         return (
-          <Link
-            key={p.id ?? i}
-            href={category === 'shoes' ? `/reviews/${p.slug}` : `/${category === 'vests' ? 'vests' : 'gels'}?highlight=${p.slug}`}
-            className={`grid items-center gap-3 border-b border-rule-soft px-4 py-3 no-underline${i % 2 === 1 ? ' bg-sand-deep/40' : ''}`}
-            style={{ gridTemplateColumns: gridCols }}
-          >
-            <span className="font-mono text-[12px] text-ink-50">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <div className="relative h-12 w-12 overflow-hidden rounded-[3px] bg-sand-deep">
-              {p.image_url && (
-                <Image src={p.image_url} alt={modelName} fill className="object-cover" sizes="48px" />
-              )}
-            </div>
-            <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">
-                {p.brand?.toUpperCase()}
-                {category === 'shoes' && p.carbon_plate && ' · ◆ CARBON'}
-                {category === 'vests' && p.utmb_compliant && ' · UTMB'}
-                {category === 'gels' && p.real_food && ' · REAL FOOD'}
-              </div>
-              <div className="font-display text-[17px] font-medium tracking-[-0.015em] text-carbon">
-                {modelName}
-              </div>
-              {category === 'shoes' && (
-                <div className="mt-0.5 font-mono text-[10.5px] text-ink-50">
-                  · {p.discipline}
-                  {p.tagline ? ` · ${p.tagline}` : ''}
-                </div>
-              )}
-            </div>
-            {cols.map((c) => (
-              <span key={c.key} className="text-right font-mono text-[13px]">
-                {c.key === 'price_usd' || c.key === 'price_per_serving'
-                  ? fmt(p[c.key])
-                  : p[c.key] ?? '—'}
-                {c.unit && c.key !== 'price_usd' && c.key !== 'price_per_serving' && (
-                  <span className="text-ink-50">{c.unit}</span>
+          <div key={p.id ?? i} className={`border-b border-rule-soft${rowBg}`}>
+
+            {/* ── Mobile row ── */}
+            <Link href={rowHref} className="flex items-center gap-3 px-3 py-3 no-underline md:hidden">
+              {/* Image */}
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[3px] bg-sand-deep">
+                {p.image_url && (
+                  <Image src={p.image_url} alt={modelName} fill className="object-cover" sizes="56px" />
                 )}
-              </span>
-            ))}
-            <div className="flex justify-end">
-              <ScoreCircle score={Number(p.our_rating ?? 0)} />
-            </div>
-            <span
-              className="rounded-[3px] bg-carbon py-2 text-center font-mono text-[11px] font-medium text-sand"
-              onClick={(e) => {
-                e.preventDefault();
-                window.open(buyHref, '_blank', 'noopener');
-              }}
+              </div>
+              {/* Info */}
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-50">
+                  {p.brand?.toUpperCase()}
+                  {category === 'shoes' && p.carbon_plate && ' · ◆'}
+                  {category === 'vests' && p.utmb_compliant && ' · UTMB'}
+                  {category === 'gels' && p.real_food && ' · REAL FOOD'}
+                  {category === 'shoes' && p.discipline && ` · ${p.discipline}`}
+                </div>
+                <div className="truncate font-display text-[16px] font-medium tracking-[-0.015em] text-carbon">
+                  {modelName}
+                </div>
+                <div className="mt-0.5 font-mono text-[10px] text-ink-50">{specPills(p)}</div>
+              </div>
+              {/* Score + Buy */}
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <ScoreCircle score={Number(p.our_rating ?? 0)} />
+                <span
+                  className="rounded-[3px] bg-carbon px-3 py-1.5 font-mono text-[10px] font-medium text-sand whitespace-nowrap"
+                  onClick={(e) => { e.preventDefault(); window.open(buyHref, '_blank', 'noopener'); }}
+                >
+                  BUY →
+                </span>
+              </div>
+            </Link>
+
+            {/* ── Desktop row ── */}
+            <Link
+              href={rowHref}
+              className="hidden md:grid items-center gap-3 px-4 py-3 no-underline"
+              style={{ gridTemplateColumns: desktopGridCols }}
             >
-              BUY{priceLabel} →
-            </span>
-          </Link>
+              <span className="font-mono text-[12px] text-ink-50">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div className="relative h-12 w-12 overflow-hidden rounded-[3px] bg-sand-deep">
+                {p.image_url && (
+                  <Image src={p.image_url} alt={modelName} fill className="object-cover" sizes="48px" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">
+                  {p.brand?.toUpperCase()}
+                  {category === 'shoes' && p.carbon_plate && ' · ◆ CARBON'}
+                  {category === 'vests' && p.utmb_compliant && ' · UTMB'}
+                  {category === 'gels' && p.real_food && ' · REAL FOOD'}
+                </div>
+                <div className="truncate font-display text-[17px] font-medium tracking-[-0.015em] text-carbon">
+                  {modelName}
+                </div>
+                {category === 'shoes' && (
+                  <div className="mt-0.5 font-mono text-[10.5px] text-ink-50">
+                    · {p.discipline}{p.tagline ? ` · ${p.tagline}` : ''}
+                  </div>
+                )}
+              </div>
+              {cols.map((c) => (
+                <span key={c.key} className="text-right font-mono text-[13px]">
+                  {c.key === 'price_usd' || c.key === 'price_per_serving'
+                    ? fmt(p[c.key])
+                    : p[c.key] ?? '—'}
+                  {c.unit && c.key !== 'price_usd' && c.key !== 'price_per_serving' && (
+                    <span className="text-ink-50">{c.unit}</span>
+                  )}
+                </span>
+              ))}
+              <div className="flex justify-end">
+                <ScoreCircle score={Number(p.our_rating ?? 0)} />
+              </div>
+              <span
+                className="rounded-[3px] bg-carbon py-2 text-center font-mono text-[11px] font-medium text-sand"
+                onClick={(e) => { e.preventDefault(); window.open(buyHref, '_blank', 'noopener'); }}
+              >
+                BUY{priceLabel} →
+              </span>
+            </Link>
+
+          </div>
         );
       })}
     </>
