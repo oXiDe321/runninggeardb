@@ -242,11 +242,8 @@ function UnifiedTable({
           <Link
             key={p.id ?? i}
             href={category === 'shoes' ? `/reviews/${p.slug}` : `/${category === 'vests' ? 'vests' : 'gels'}?highlight=${p.slug}`}
-            className="grid items-center gap-3 border-b border-rule-soft px-4 py-3 no-underline"
-            style={{
-              gridTemplateColumns: gridCols,
-              backgroundColor: i % 2 ? 'var(--color-sand-deep, #d9d3c1) / 0.4' : undefined,
-            }}
+            className={`grid items-center gap-3 border-b border-rule-soft px-4 py-3 no-underline${i % 2 === 1 ? ' bg-sand-deep/40' : ''}`}
+            style={{ gridTemplateColumns: gridCols }}
           >
             <span className="font-mono text-[12px] text-ink-50">
               {String(i + 1).padStart(2, '0')}
@@ -275,8 +272,10 @@ function UnifiedTable({
             </div>
             {cols.map((c) => (
               <span key={c.key} className="text-right font-mono text-[13px]">
-                {c.unit && c.key === 'price_usd' ? `$${p[c.key]}` : p[c.key] ?? '—'}
-                {c.unit && c.key !== 'price_usd' && c.key !== 'price_per_serving' && (
+                {c.key === 'price_usd' || c.key === 'price_per_serving'
+                  ? `$${p[c.key] ?? '—'}`
+                  : p[c.key] ?? '—'}
+                {c.unit && (
                   <span className="text-ink-50">{c.unit}</span>
                 )}
               </span>

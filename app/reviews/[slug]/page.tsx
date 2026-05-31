@@ -117,12 +117,12 @@ export default async function ReviewPage({ params }: PageProps) {
       <DisclosureStrip lastCheckedAt={lastChecked} />
 
       {/* ── Header strip ───────────────────────────────────────── */}
-      <header className="border-b border-rule px-8 pb-[22px] pt-7">
+      <header className="border-b border-rule px-4 pb-6 pt-6 sm:px-6 sm:pb-[22px] sm:pt-7 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="font-mono text-[11.5px] uppercase tracking-[0.16em] text-ink-50">
             rgd ▸ index ▸ shoes ▸ {r.discipline} ▸ <span className="text-rust">{r.slug}</span>
           </div>
-          <div className="mt-3.5 grid grid-cols-[1.4fr_1fr] gap-12">
+          <div className="mt-3.5 grid grid-cols-1 gap-6 md:grid-cols-[1.4fr_1fr] md:gap-12">
             <div>
               <div className="mb-1.5 font-mono text-[11.5px] tracking-[0.14em] text-ink-50">
                 <span className="text-rust">● REVIEW</span> · SKU {r.id.slice(0, 4).toUpperCase()}{' '}
@@ -139,7 +139,7 @@ export default async function ReviewPage({ params }: PageProps) {
                 {r.miles_tested != null && <> · {r.miles_tested} MI</>}
                 {r.peer_reviewer_count > 0 && <> · {r.peer_reviewer_count + 1} TESTERS</>}
               </div>
-              <h1 className="m-0 font-display text-[72px] font-semibold leading-[0.96] tracking-[-0.04em]">
+              <h1 className="m-0 font-display text-[40px] font-semibold leading-[0.96] tracking-[-0.04em] sm:text-[56px] lg:text-[72px]">
                 {r.brand} <span className="text-rust">{r.model}.</span>
               </h1>
               {r.tagline && (
@@ -179,9 +179,9 @@ export default async function ReviewPage({ params }: PageProps) {
       />
 
       {/* ── Two-column main ─────────────────────────────────────── */}
-      <div className="mx-auto grid max-w-7xl grid-cols-[1.55fr_1fr] gap-0 border-b border-rule">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-0 border-b border-rule lg:grid-cols-[1.55fr_1fr]">
         {/* LEFT */}
-        <article className="border-r border-rule px-8 pb-10 pt-6">
+        <article className="border-b border-rule px-4 pb-10 pt-6 sm:px-6 lg:border-b-0 lg:border-r lg:px-8">
           {r.tester && (
             <TesterByline
               tester={r.tester}
@@ -238,8 +238,8 @@ export default async function ReviewPage({ params }: PageProps) {
               <h2 className="mb-3.5 font-display text-[30px] font-semibold tracking-[-0.03em]">
                 · Versus the field
               </h2>
-              <div className="overflow-hidden rounded border border-rule">
-                <div className="grid grid-cols-[1.4fr_70px_70px_70px_60px] bg-sand-deep px-3.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
+              <div className="overflow-x-auto rounded border border-rule">
+                <div className="grid grid-cols-[1.4fr_70px_70px_70px_60px] bg-sand-deep px-3.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50" style={{minWidth:'370px'}}>
                   <span>model</span>
                   <span className="text-right">wt</span>
                   <span className="text-right">drop</span>
@@ -262,6 +262,7 @@ export default async function ReviewPage({ params }: PageProps) {
                 ].map((c, i, arr) => (
                   <div
                     key={c.id}
+                    style={{minWidth:'370px'}}
                     className={`grid grid-cols-[1.4fr_70px_70px_70px_60px] items-center px-3.5 py-2.5 font-mono text-[12.5px] ${
                       i < arr.length - 1 ? 'border-b border-rule-soft' : ''
                     } ${c.self ? 'bg-rust/[0.06]' : ''}`}
@@ -317,7 +318,7 @@ export default async function ReviewPage({ params }: PageProps) {
         </article>
 
         {/* RIGHT RAIL */}
-        <aside className="px-8 pb-10 pt-6">
+        <aside className="px-4 pb-10 pt-6 sm:px-6 lg:px-8">
           {r.retailer_prices.length > 0 ? (
             <RetailerList prices={r.retailer_prices} msrp={r.msrp_usd} />
           ) : (

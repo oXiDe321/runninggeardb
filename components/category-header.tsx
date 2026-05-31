@@ -18,14 +18,14 @@ interface Props {
 export default function CategoryHeader({ slug, title, total, description, metadata }: Props) {
   const slugClean = slug.replace('/', '');
   return (
-    <header className="border-b border-rule px-8 py-9">
+    <header className="border-b border-rule px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-50">
           rgd ▸ index ▸ <span className="text-rust">{slugClean}</span>
         </div>
-        <div className="mt-3 grid grid-cols-1 items-end gap-8 md:grid-cols-[1fr_360px]">
+        <div className="mt-3 grid grid-cols-1 items-end gap-6 md:grid-cols-[1fr_360px] md:gap-8">
           <div>
-            <h1 className="m-0 font-display text-[72px] font-semibold leading-[0.95] tracking-[-0.04em]">
+            <h1 className="m-0 font-display text-[48px] font-semibold leading-[0.95] tracking-[-0.04em] sm:text-[60px] lg:text-[72px]">
               {slugClean}
               {total !== undefined && (
                 <> <span className="text-rust">· {total}</span></>

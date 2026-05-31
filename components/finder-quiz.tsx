@@ -139,12 +139,12 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
 
   return (
     <div className="bg-sand text-carbon">
-      <header className="border-b border-rule px-8 py-10">
+      <header className="border-b border-rule px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-50">
             rgd ▸ <span className="text-rust">/finder</span> · 5 questions · &lt; 60 sec
           </div>
-          <h1 className="m-0 mt-3 font-display text-[68px] font-semibold leading-[0.95] tracking-[-0.04em]">
+          <h1 className="m-0 mt-3 font-display text-[38px] font-semibold leading-[0.95] tracking-[-0.04em] sm:text-[52px] lg:text-[68px]">
             Find your shoe <span className="text-rust">in five questions.</span>
           </h1>
           <p className="mt-3 max-w-[720px] font-mono text-[14px] text-ink-70">
@@ -155,9 +155,9 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-7xl grid-cols-[240px_1fr_360px] items-start gap-8 px-8 py-10">
-        {/* Stepper */}
-        <aside>
+      <section className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[240px_1fr_360px] lg:gap-8 lg:px-8">
+        {/* Stepper — hidden on mobile, shown as sidebar on desktop */}
+        <aside className="hidden lg:block">
           <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-50">
             // progress
           </span>
@@ -209,10 +209,23 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
 
         {/* Question */}
         <div>
+          {/* Mobile progress dots */}
+          <div className="mb-4 flex gap-1.5 lg:hidden">
+            {QUESTIONS.map((qq, i) => (
+              <button
+                key={qq.id}
+                onClick={() => setStep(i)}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === step ? 'w-6 bg-rust' : answers[qq.id] ? 'w-3 bg-moss' : 'w-3 bg-rule'
+                }`}
+                aria-label={`Go to question ${i + 1}`}
+              />
+            ))}
+          </div>
           <div className="font-mono text-[11.5px] uppercase tracking-[0.14em] text-ink-50">
             QUESTION {String(step + 1).padStart(2, '0')} / 05
           </div>
-          <h2 className="m-0 mt-1 font-display text-[44px] font-semibold leading-[1.02] tracking-[-0.035em]">
+          <h2 className="m-0 mt-1 font-display text-[32px] font-semibold leading-[1.02] tracking-[-0.035em] sm:text-[38px] lg:text-[44px]">
             {q.title}
           </h2>
           <p className="m-0 mt-2 max-w-[560px] font-mono text-[13px] text-ink-70">{q.sub}</p>

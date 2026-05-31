@@ -45,7 +45,7 @@ export default async function CategoryPage({ title, description, category, table
           { k: 'avg score', v: `${avgRating} / 10` },
         ]}
       />
-      <section className="mx-auto max-w-7xl px-8 py-8">
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <ProductTable products={products ?? []} category={category} />
       </section>
     </div>

@@ -43,29 +43,29 @@ export default function StickyBuyBar({
       className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-rust bg-carbon text-sand transition-transform duration-200"
       style={{ transform: shown ? 'translateY(0)' : 'translateY(110%)' }}
     >
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-8 py-3.5">
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-3.5 lg:px-8">
         {image && (
-          <div className="relative h-12 w-12 overflow-hidden rounded-[3px]">
+          <div className="relative hidden h-12 w-12 shrink-0 overflow-hidden rounded-[3px] sm:block">
             <Image src={image} alt="" fill className="object-cover" sizes="48px" />
           </div>
         )}
-        <div className="flex-1">
-          <div className="font-mono text-[10.5px] tracking-[0.14em] text-ink-30">
+        <div className="min-w-0 flex-1">
+          <div className="font-mono text-[10px] tracking-[0.14em] text-ink-30 sm:text-[10.5px]">
             {brand.toUpperCase()} · {discipline.toUpperCase()}
           </div>
-          <div className="font-display text-[19px] font-medium tracking-[-0.02em]">
+          <div className="truncate font-display text-[15px] font-medium tracking-[-0.02em] sm:text-[19px]">
             {model}
             {rating != null && (
-              <>
+              <span className="hidden sm:inline">
                 {' · '}
                 <span className="text-rust">{rating.toFixed(1)}/10</span>
-              </>
+              </span>
             )}
           </div>
         </div>
-        <span className="font-mono text-[11.5px] text-ink-30">{retailer} · live</span>
+        <span className="hidden font-mono text-[11.5px] text-ink-30 md:inline">{retailer} · live</span>
         {price != null && (
-          <span className="font-display text-[30px] font-semibold tracking-[-0.03em]">
+          <span className="font-display text-[22px] font-semibold tracking-[-0.03em] sm:text-[30px]">
             ${price}
           </span>
         )}
@@ -73,7 +73,7 @@ export default function StickyBuyBar({
           href={affiliateUrl(buyUrl)}
           rel="sponsored nofollow noopener"
           target="_blank"
-          className="rounded-[3px] bg-rust px-[22px] py-3 font-mono text-[13px] font-semibold tracking-[0.04em] text-sand"
+          className="shrink-0 rounded-[3px] bg-rust px-4 py-2.5 font-mono text-[12px] font-semibold tracking-[0.04em] text-sand sm:px-[22px] sm:py-3 sm:text-[13px]"
         >
           BUY · →
         </a>

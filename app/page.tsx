@@ -102,13 +102,13 @@ export default async function HomePage() {
   return (
     <div className="bg-sand text-carbon">
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="border-b border-rule px-8 pb-12 pt-14">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-end gap-12 lg:grid-cols-[7fr_5fr]">
+      <section className="border-b border-rule px-4 pb-10 pt-10 sm:px-6 sm:pb-12 sm:pt-14 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-end gap-8 lg:grid-cols-[7fr_5fr] lg:gap-12">
           <div>
             <div className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
               · RGD/INDEX · {d.totalCount} SKU · {monthYear()} ·
             </div>
-            <h1 className="m-0 mt-5 font-display text-[96px] font-semibold leading-[0.92] tracking-[-0.045em]">
+            <h1 className="m-0 mt-5 font-display text-[48px] font-semibold leading-[0.92] tracking-[-0.045em] sm:text-[68px] lg:text-[96px]">
               Running gear,
               <br />
               <span className="text-rust">by the numbers.</span>
@@ -177,7 +177,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── THE INDEX (top-12) ──────────────────────────────────── */}
-      <section className="border-b border-rule px-8 py-12">
+      <section className="border-b border-rule px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -196,8 +196,8 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="overflow-hidden rounded-[6px] border border-rule bg-paper">
-            <div className="grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
+          <div className="overflow-x-auto rounded-[6px] border border-rule bg-paper">
+            <div className="grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50" style={{minWidth:'660px'}}>
               <span>#</span><span /><span>brand / model</span>
               <span className="text-right">drop</span>
               <span className="text-right">wt</span>
@@ -210,6 +210,7 @@ export default async function HomePage() {
               <Link
                 key={s.id}
                 href={`/reviews/${s.slug}`}
+                style={{ minWidth: '660px' }}
                 className={`grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_70px_90px_120px] items-center border-b border-rule-soft px-4 py-3.5 last:border-0 ${
                   i === 0 ? 'bg-rust/[0.05]' : ''
                 }`}
