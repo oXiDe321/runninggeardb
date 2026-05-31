@@ -5,6 +5,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import PriceDisplay from '@/components/price-display';
 
 export const revalidate = 300;
 
@@ -202,7 +203,7 @@ export default async function HomePage() {
               <span className="text-right">drop</span>
               <span className="text-right">wt</span>
               <span className="text-right">stack</span>
-              <span className="text-right">$</span>
+              <span className="text-right">price</span>
               <span className="text-right">score ↓</span>
               <span className="text-right" />
             </div>
@@ -241,7 +242,7 @@ export default async function HomePage() {
                 <span className="text-right font-mono text-[13px]">
                   {s.stack_heel_mm}<span className="text-ink-50">mm</span>
                 </span>
-                <span className="text-right font-mono text-[13px]">${s.price_usd}</span>
+                <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
                 <div
                   className="text-right font-display text-[22px] font-semibold tracking-[-0.02em]"
                   style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}
@@ -250,7 +251,7 @@ export default async function HomePage() {
                   <span className="ml-1 font-mono text-[10px] text-ink-50">/10</span>
                 </div>
                 <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
-                  BUY · ${s.price_usd}
+                  BUY · <PriceDisplay usd={s.price_usd} />
                 </span>
               </Link>
             ))}

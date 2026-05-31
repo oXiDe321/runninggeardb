@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
+import { useCurrency } from '@/lib/currency';
 
 type Category = 'shoes' | 'vests' | 'gels';
 type Product = Record<string, any>;
@@ -205,8 +206,16 @@ function UnifiedTable({
   sort: { key: string; dir: 'asc' | 'desc' };
   setSort: (s: { key: string; dir: 'asc' | 'desc' }) => void;
 }) {
+  const { fmt, symbol } = useCurrency();
   const colWidths = cols.map((c) => c.width).join(' ');
   const gridCols = `40px 60px 2fr ${colWidths} 90px 130px`;
+
+  // Update the $ column header label to reflect current currency symbol
+  const displayCols = cols.map((c) =>
+    c.key === 'price_usd' || c.key === 'price_per_serving'
+      ? { ...c, label: c.key === 'price_per_serving' ? `${symbol}/srv` : symbol }
+      : c
+  );
 
   return (
     <>
@@ -220,7 +229,7 @@ function UnifiedTable({
         <TH k={category === 'gels' ? 'product' : 'model'} sort={sort} setSort={setSort}>
           brand / {category === 'gels' ? 'product' : 'model'}
         </TH>
-        {cols.map((c) => (
+        {displayCols.map((c) => (
           <TH key={c.key} k={c.key} align="right" sort={sort} setSort={setSort}>
             {c.label}
           </TH>
@@ -234,7 +243,7 @@ function UnifiedTable({
       {/* Rows */}
       {rows.map((p, i) => {
         const modelName = category === 'gels' ? p.product : p.model;
-        const buyPrice = category === 'gels' ? '' : ` · $${p.price_usd}`;
+        const priceLabel = category === 'gels' ? '' : ` · ${fmt(p.price_usd)}`;
         const buyHref = p.amazon_url && p.amazon_url !== 'https://amazon.com'
           ? affiliateUrl(p.amazon_url)
           : amazonSearchUrl(p.brand, modelName);
@@ -273,9 +282,9 @@ function UnifiedTable({
             {cols.map((c) => (
               <span key={c.key} className="text-right font-mono text-[13px]">
                 {c.key === 'price_usd' || c.key === 'price_per_serving'
-                  ? `$${p[c.key] ?? '—'}`
+                  ? fmt(p[c.key])
                   : p[c.key] ?? '—'}
-                {c.unit && (
+                {c.unit && c.key !== 'price_usd' && c.key !== 'price_per_serving' && (
                   <span className="text-ink-50">{c.unit}</span>
                 )}
               </span>
@@ -290,7 +299,7 @@ function UnifiedTable({
                 window.open(buyHref, '_blank', 'noopener');
               }}
             >
-              BUY{buyPrice} →
+              BUY{priceLabel} →
             </span>
           </Link>
         );
@@ -388,6 +397,7 @@ function ScoreCircle({ score }: { score: number }) {
 // ── grid-mode card ────────────────────────────────────────────────
 
 function ProductCard({ product, category }: { product: Product; category: Category }) {
+  const { fmt, symbol } = useCurrency();
   const name = product.model ?? product.product;
   return (
     <Link
@@ -412,7 +422,7 @@ function ProductCard({ product, category }: { product: Product; category: Catego
               <Spec label="drop" value={product.drop_mm ? `${product.drop_mm}mm` : '—'} />
               <Spec label="weight" value={product.weight_g ? `${product.weight_g}g` : '—'} />
               <Spec label="stack" value={product.stack_heel_mm ? `${product.stack_heel_mm}mm` : '—'} />
-              <Spec label="$" value={product.price_usd ? `$${product.price_usd}` : '—'} />
+              <Spec label={symbol} value={fmt(product.price_usd)} />
             </>
           )}
           {category === 'vests' && (
@@ -420,7 +430,7 @@ function ProductCard({ product, category }: { product: Product; category: Catego
               <Spec label="capacity" value={product.capacity_l ? `${product.capacity_l}L` : '—'} />
               <Spec label="weight" value={product.weight_g ? `${product.weight_g}g` : '—'} />
               <Spec label="UTMB" value={product.utmb_compliant ? 'yes' : 'no'} />
-              <Spec label="$" value={product.price_usd ? `$${product.price_usd}` : '—'} />
+              <Spec label={symbol} value={fmt(product.price_usd)} />
             </>
           )}
           {category === 'gels' && (
@@ -428,7 +438,7 @@ function ProductCard({ product, category }: { product: Product; category: Catego
               <Spec label="carbs" value={`${product.carbs_per_serving_g}g`} />
               <Spec label="sodium" value={`${product.sodium_mg}mg`} />
               <Spec label="caffeine" value={`${product.caffeine_mg ?? 0}mg`} />
-              <Spec label="$/srv" value={`$${product.price_per_serving}`} />
+              <Spec label={`${symbol}/srv`} value={fmt(product.price_per_serving)} />
             </>
           )}
         </div>

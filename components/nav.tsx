@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Logo from './logo';
 import SearchTrigger from './search-trigger';
 import MobileMenu from './mobile-menu';
+import CurrencyToggle from './currency-toggle';
 import { supabase } from '@/lib/supabase';
 import { getAllSearchableProducts } from '@/lib/search-data';
 
@@ -48,10 +49,10 @@ export default async function Nav() {
             <span className="hidden sm:inline">FUEL·{counts.gels}</span>
             <span className="text-ink-30">SYNC·LIVE</span>
           </div>
-          <div className="hidden gap-6 text-ink-30 md:flex">
+          <div className="hidden gap-6 text-ink-30 md:flex items-center">
             <span>v4.2</span>
             <span><span className="text-moss">●</span> STATUS · OK</span>
-            <span>USD · METRIC</span>
+            <CurrencyToggle />
           </div>
         </div>
       </div>
