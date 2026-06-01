@@ -285,7 +285,7 @@ function UnifiedTable({
           : amazonSearchUrl(p.brand, modelName);
         const rowHref = category === 'shoes'
           ? `/reviews/${p.slug}`
-          : `/${category === 'vests' ? 'vests' : 'gels'}?highlight=${p.slug}`;
+          : `/${category}/${p.slug}`;
         const rowBg = i % 2 === 1 ? ' bg-sand-deep/40' : '';
 
         return (
@@ -476,7 +476,7 @@ function ProductCard({ product, category }: { product: Product; category: Catego
   const name = product.model ?? product.product;
   return (
     <Link
-      href={category === 'shoes' ? `/reviews/${product.slug}` : `/${category === 'vests' ? 'vests' : 'gels'}?highlight=${product.slug}`}
+      href={category === 'shoes' ? `/reviews/${product.slug}` : `/${category}/${product.slug}`}
       className="block overflow-hidden rounded border border-rule bg-paper no-underline"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-sand-deep">
