@@ -6,6 +6,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import PriceDisplay from '@/components/price-display';
+import WeightDisplay from '@/components/weight-display';
+import WeightRange from '@/components/weight-range';
+import PriceRange from '@/components/price-range';
 
 export const revalidate = 300;
 
@@ -149,13 +152,13 @@ export default async function HomePage() {
               </span>
               <span className="font-mono text-[10.5px] text-moss">● live</span>
             </div>
-            {[
+            {([
               ['SKU indexed', String(d.totalCount), 'all categories'],
               ['Reviews live', `${d.totalCount} / ${d.totalCount}`, '100% coverage'],
-              ['Avg price', `$${d.avgPrice}`, 'shoes + vests'],
+              ['Avg price', d.avgPrice === '—' ? '—' : <PriceDisplay key="avg" usd={Number(d.avgPrice)} />, 'shoes + vests'],
               ['Categories', '3', 'shoes · vests · fuel'],
               ['Editorial standards', 'Published', 'all data sourced from manufacturers'],
-            ].map(([l, v, d2], i, arr) => (
+            ] as const).map(([l, v, d2], i, arr) => (
               <div
                 key={l}
                 className={`grid grid-cols-[1fr_auto] gap-3 py-3 ${
@@ -222,7 +225,7 @@ export default async function HomePage() {
                     </div>
                     <div className="truncate font-display text-[16px] font-medium tracking-[-0.015em] text-carbon">{s.model}</div>
                     <div className="mt-0.5 font-mono text-[10px] text-ink-50">
-                      {s.drop_mm}mm · {s.weight_g}g · <PriceDisplay usd={s.price_usd} />
+                      {s.drop_mm}mm · <WeightDisplay grams={s.weight_g} /> · <PriceDisplay usd={s.price_usd} />
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -249,7 +252,7 @@ export default async function HomePage() {
                     <div className="truncate font-display text-[18px] font-medium tracking-[-0.015em] text-carbon">{s.model}</div>
                   </div>
                   <span className="text-right font-mono text-[13px]">{s.drop_mm}<span className="text-ink-50">mm</span></span>
-                  <span className="text-right font-mono text-[13px]">{s.weight_g}<span className="text-ink-50">g</span></span>
+                  <WeightDisplay grams={s.weight_g} className="text-right font-mono text-[13px]" />
                   <span className="text-right font-mono text-[13px]">{s.stack_heel_mm}<span className="text-ink-50">mm</span></span>
                   <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
                   <div className="text-right font-display text-[22px] font-semibold tracking-[-0.02em]" style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
@@ -282,10 +285,10 @@ export default async function HomePage() {
               title="Running shoes"
               count={d.shoeStats.count}
               stats={[
-                ['weight', range(d.shoeStats.weight, 'g')],
+                ['weight', <WeightRange key="w" min={d.shoeStats.weight[0]} max={d.shoeStats.weight[1]} />],
                 ['drop',   range(d.shoeStats.drop, 'mm')],
                 ['stack',  range(d.shoeStats.stack, 'mm')],
-                ['$',      range(d.shoeStats.price, '')],
+                ['price',  <PriceRange key="p" min={d.shoeStats.price[0]} max={d.shoeStats.price[1]} />],
               ]}
             />
             <CategoryCard
@@ -295,9 +298,9 @@ export default async function HomePage() {
               count={d.vestStats.count}
               stats={[
                 ['capacity', range(d.vestStats.cap, 'L')],
-                ['weight',   range(d.vestStats.weight, 'g')],
+                ['weight',   <WeightRange key="w" min={d.vestStats.weight[0]} max={d.vestStats.weight[1]} />],
                 ['UTMB',     'filterable'],
-                ['$',        range(d.vestStats.price, '')],
+                ['price',    <PriceRange key="p" min={d.vestStats.price[0]} max={d.vestStats.price[1]} />],
               ]}
             />
             <CategoryCard
@@ -309,7 +312,7 @@ export default async function HomePage() {
                 ['carbs',     range(d.gelStats.carbs, 'g')],
                 ['caffeine',  range(d.gelStats.caffeine, 'mg')],
                 ['real-food', 'tagged'],
-                ['$/serve',   range(d.gelStats.price, '')],
+                ['$/serve',   <PriceRange key="p" min={d.gelStats.price[0]} max={d.gelStats.price[1]} />],
               ]}
             />
           </div>
@@ -425,7 +428,7 @@ function CategoryCard({
   slug: string;
   title: string;
   count: number;
-  stats: (readonly [string, string])[];
+  stats: (readonly [string, React.ReactNode])[];
 }) {
   return (
     <Link

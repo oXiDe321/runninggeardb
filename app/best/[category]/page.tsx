@@ -10,6 +10,8 @@ import type { Metadata } from 'next';
 
 import { supabase } from '@/lib/supabase';
 import { BEST_PAGES, getBestPage, type BestPageConfig } from '@/lib/best-pages';
+import PriceDisplay from '@/components/price-display';
+import WeightDisplay from '@/components/weight-display';
 
 export const revalidate = 3600;
 
@@ -207,8 +209,8 @@ export default async function BestCategoryPage({ params }: PageProps) {
                       </div>
                       <div className="truncate font-display text-[16px] font-medium tracking-[-0.015em] text-carbon">{s.model}</div>
                       <div className="mt-0.5 font-mono text-[10px] text-ink-50">
-                        {s.drop_mm != null ? `${s.drop_mm}mm drop` : '—'} · {s.weight_g != null ? `${s.weight_g}g` : '—'}
-                        {s.price_usd != null ? ` · $${s.price_usd}` : ''}
+                        {s.drop_mm != null ? `${s.drop_mm}mm drop` : '—'} · <WeightDisplay grams={s.weight_g} />
+                        {s.price_usd != null ? <> · <PriceDisplay usd={s.price_usd} /></> : ''}
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
@@ -232,15 +234,11 @@ export default async function BestCategoryPage({ params }: PageProps) {
                     <span className="text-right font-mono text-[13px]">
                       {s.drop_mm != null ? <>{s.drop_mm}<span className="text-ink-50">mm</span></> : <span className="text-ink-50">—</span>}
                     </span>
-                    <span className="text-right font-mono text-[13px]">
-                      {s.weight_g != null ? <>{s.weight_g}<span className="text-ink-50">g</span></> : <span className="text-ink-50">—</span>}
-                    </span>
+                    <WeightDisplay grams={s.weight_g} className="text-right font-mono text-[13px]" />
                     <span className="text-right font-mono text-[13px]">
                       {s.stack_heel_mm != null ? <>{s.stack_heel_mm}<span className="text-ink-50">mm</span></> : <span className="text-ink-50">—</span>}
                     </span>
-                    <span className="text-right font-mono text-[13px]">
-                      {s.price_usd != null ? <>$<span className="font-medium">{s.price_usd}</span></> : <span className="text-ink-50">—</span>}
-                    </span>
+                    <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px] font-medium" />
                     <div className="text-right font-display text-[22px] font-semibold tracking-[-0.02em]" style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
                       {s.our_rating ?? '—'}<span className="ml-0.5 font-mono text-[10px] text-ink-50">/10</span>
                     </div>

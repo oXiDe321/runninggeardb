@@ -19,6 +19,8 @@ import StickyBuyBar from '@/components/review/sticky-buy-bar';
 import ReviewProse from '@/components/review/review-prose';
 import ReviewJsonLd from '@/components/review/review-jsonld';
 import SpecSheet from '@/components/review/spec-sheet';
+import PriceDisplay from '@/components/price-display';
+import WeightDisplay from '@/components/weight-display';
 
 const SITE_URL = 'https://runninggeardb.com';
 
@@ -247,9 +249,9 @@ export default async function ReviewPage({ params }: PageProps) {
                       <span className="text-ink-50">{c.brand}</span> {c.model}
                       {c.self && <span className="ml-1.5 text-rust">★ this</span>}
                     </span>
-                    <span className="text-right">{c.weight_g}g</span>
+                    <WeightDisplay grams={c.weight_g} className="text-right" />
                     <span className="text-right">{c.drop_mm}mm</span>
-                    <span className="text-right">${c.price_usd}</span>
+                    <PriceDisplay usd={c.price_usd} className="text-right" />
                     <span className={`text-right ${c.self ? 'font-semibold text-rust' : ''}`}>
                       {c.our_rating}
                     </span>

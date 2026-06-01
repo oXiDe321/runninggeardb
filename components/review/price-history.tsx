@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from 'react';
 import type { PriceHistoryPoint } from '@/lib/review-types';
+import { useCurrency } from '@/lib/currency';
 
 export default function PriceHistory({
   points,
@@ -14,6 +15,7 @@ export default function PriceHistory({
   currentPrice: number | null;
 }) {
   const [alertOpen, setAlertOpen] = useState(false);
+  const { fmt } = useCurrency();
 
   // Reduce to one observation per day, prefer the lowest retailer that day.
   const daily = useMemo(() => {
@@ -38,7 +40,7 @@ export default function PriceHistory({
           <span className="font-mono text-[10.5px] text-ink-50">tracking…</span>
         </div>
         <div className="mt-1 font-display text-[28px] font-semibold tracking-[-0.03em] text-carbon">
-          {currentPrice ? `$${currentPrice}` : '—'}
+          {currentPrice ? fmt(currentPrice) : '—'}
         </div>
         <div className="mt-1.5 font-mono text-[11px] text-ink-50">
           History fills in after a few days of price-checks.
@@ -69,17 +71,17 @@ export default function PriceHistory({
           price · 90 days
         </span>
         <span className={`font-mono text-[10.5px] ${nearLow ? 'text-moss' : 'text-ink-50'}`}>
-          {nearLow ? '● near 90-day low' : `range $${min}–$${max}`}
+          {nearLow ? '● near 90-day low' : `range ${fmt(min)}–${fmt(max)}`}
         </span>
       </div>
 
       <div className="mt-1 flex items-baseline gap-2">
         <span className="font-display text-[30px] font-semibold tracking-[-0.03em] text-carbon">
-          ${last}
+          {fmt(last)}
         </span>
         {delta !== 0 && (
           <span className="font-mono text-[11.5px] text-ink-50">
-            {delta < 0 ? '↓' : '↑'} {delta < 0 ? '-' : '+'}${Math.abs(delta).toFixed(0)} since{' '}
+            {delta < 0 ? '↓' : '↑'} {delta < 0 ? '-' : '+'}{fmt(Math.abs(delta))} since{' '}
             {daily[0].d.slice(5)}
           </span>
         )}
