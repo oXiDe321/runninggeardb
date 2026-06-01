@@ -37,6 +37,7 @@ const DELAY = 2500;
 const AFFILIATE_TAG = 'trailgear-22';
 const AMAZON_BASE = 'www.amazon.com.au';
 const REDDIT_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const USD_TO_AUD = 1.55; // Convert DeepSeek USD prices to AUD for DB
 
 const KNOWN_BRANDS = [
   'HOKA', 'Nike', 'Salomon', 'Brooks', 'Saucony', 'ASICS', 'Adidas',
@@ -555,6 +556,9 @@ async function insertProduct(
   amazonUrl: string,
 ): Promise<string | null> {
   const now = new Date().toISOString();
+  // Convert USD prices (from DeepSeek) to AUD for DB storage
+  const audPrice = specs.price_usd ? Math.round(specs.price_usd * USD_TO_AUD / 5) * 5 : null;
+  const audPerServing = specs.price_per_serving ? Math.round(specs.price_per_serving * USD_TO_AUD) : null;
   const base: Record<string, any> = {
     brand: v.brand,
     slug: v.slug,
@@ -575,7 +579,7 @@ async function insertProduct(
       stack_heel_mm: specs.stack_heel_mm ?? null,
       stack_forefoot_mm: specs.stack_forefoot_mm ?? null,
       carbon_plate: specs.carbon_plate ?? false,
-      price_usd: specs.price_usd ?? null,
+      price_usd: audPrice,
       terrain: specs.terrain || null,
     });
   } else if (table === 'vests') {
@@ -583,7 +587,7 @@ async function insertProduct(
       model: v.model,
       capacity_l: specs.capacity_l ?? null,
       weight_g: specs.weight_g ?? null,
-      price_usd: specs.price_usd ?? null,
+      price_usd: audPrice,
       utmb_compliant: specs.utmb_compliant ?? false,
       soft_flask_included: specs.soft_flask_included ?? false,
       front_pockets: specs.front_pockets ?? null,
@@ -596,7 +600,7 @@ async function insertProduct(
       sodium_mg: specs.sodium_mg ?? null,
       caffeine_mg: specs.caffeine_mg ?? 0,
       calories: specs.calories ?? null,
-      price_per_serving: specs.price_per_serving ?? null,
+      price_per_serving: audPerServing,
       format: specs.format || null,
       real_food: specs.real_food ?? false,
     });
