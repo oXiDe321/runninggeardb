@@ -4,8 +4,20 @@ import CategoryHeader from '@/components/category-header';
 import CompareTool from '@/components/compare-tool';
 
 export const metadata: Metadata = {
-  title: 'Compare Gear — RunningGearDB',
-  description: 'Select 2-4 products and compare specs side-by-side. Find the best gear for your needs.',
+  title: 'Compare Running Gear Side-by-Side — Specs, Weight & Price',
+  description: 'Select 2-4 shoes, vests, or gels and compare every spec side-by-side. Drop, stack height, weight, price — best value auto-highlighted.',
+  openGraph: {
+    type: 'website',
+    url: 'https://runninggeardb.com/compare',
+    title: 'Compare Running Gear Side-by-Side — Specs, Weight & Price',
+    description: 'Select 2-4 shoes, vests, or gels and compare every spec side-by-side. Drop, stack height, weight, price — best value auto-highlighted.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Compare Running Gear Side-by-Side — Specs, Weight & Price',
+    description: 'Select 2-4 shoes, vests, or gels and compare every spec side-by-side. Drop, stack height, weight, price — best value auto-highlighted.',
+  },
+  alternates: { canonical: 'https://runninggeardb.com/compare' },
 };
 
 export default async function ComparePage() {

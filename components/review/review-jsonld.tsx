@@ -61,6 +61,16 @@ export default function ReviewJsonLd({
       image: payload.image_url ?? undefined,
       sku: payload.id,
       offers,
+      additionalProperty: [
+        payload.drop_mm != null && { '@type': 'PropertyValue', name: 'Heel-to-Toe Drop', value: `${payload.drop_mm}mm`, unitCode: 'MMT' },
+        payload.stack_heel_mm != null && { '@type': 'PropertyValue', name: 'Stack Height (heel)', value: `${payload.stack_heel_mm}mm`, unitCode: 'MMT' },
+        payload.stack_forefoot_mm != null && { '@type': 'PropertyValue', name: 'Stack Height (forefoot)', value: `${payload.stack_forefoot_mm}mm`, unitCode: 'MMT' },
+        payload.in_house_weight_g != null && { '@type': 'PropertyValue', name: 'Weight (lab verified)', value: `${payload.in_house_weight_g}g`, unitCode: 'GRM' },
+        payload.weight_g != null && { '@type': 'PropertyValue', name: 'Weight (mfr spec)', value: `${payload.weight_g}g`, unitCode: 'GRM' },
+        payload.carbon_plate && { '@type': 'PropertyValue', name: 'Carbon Plate', value: 'Yes' },
+        payload.rock_plate && { '@type': 'PropertyValue', name: 'Rock Plate', value: 'Yes' },
+        { '@type': 'PropertyValue', name: 'Discipline', value: payload.discipline },
+      ].filter(Boolean),
       ...(payload.our_rating != null
         ? {
             aggregateRating: {

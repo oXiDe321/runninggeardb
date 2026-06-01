@@ -2,9 +2,21 @@ import CategoryPage from '@/components/category-page';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Running Shoes — RunningGearDB',
+  title: 'Running Shoes Database — Compare Specs, Weight & Drop',
   description:
-    'Filterable database of trail, road, and Hyrox running shoes. Compare specs, weights, drops, and prices.',
+    'Filter and compare trail, road, Hyrox, and parkrun running shoes by drop, stack height, weight, and price. Built on real spec data.',
+  openGraph: {
+    type: 'website',
+    url: 'https://runninggeardb.com/shoes',
+    title: 'Running Shoes Database — Compare Specs, Weight & Drop',
+    description: 'Filter and compare trail, road, Hyrox, and parkrun running shoes by drop, stack height, weight, and price. Built on real spec data.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Running Shoes Database — Compare Specs, Weight & Drop',
+    description: 'Filter and compare trail, road, Hyrox, and parkrun running shoes by drop, stack height, weight, and price. Built on real spec data.',
+  },
+  alternates: { canonical: 'https://runninggeardb.com/shoes' },
 };
 
 export default function ShoesPage() {

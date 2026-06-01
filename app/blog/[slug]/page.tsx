@@ -74,14 +74,34 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const { data: post } = await supabase
     .from('blog_posts')
-    .select('title, excerpt')
+    .select('title, excerpt, published_at, cover_image_url')
     .eq('slug', slug)
     .eq('published', true)
     .single();
 
+  const title = post?.title || slug.replace(/-/g, ' ');
+  const description = post?.excerpt || 'Data-driven gear guide and running insights from RunningGearDB.';
+  const url = `https://runninggeardb.com/blog/${slug}`;
+
   return {
-    title: post?.title || `${slug.replace(/-/g, ' ')} — RunningGearDB Blog`,
-    description: post?.excerpt || 'Data-driven gear guide and running insights.',
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'article',
+      url,
+      title,
+      description,
+      siteName: 'RunningGearDB',
+      publishedTime: post?.published_at ?? undefined,
+      ...(post?.cover_image_url ? { images: [{ url: post.cover_image_url }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(post?.cover_image_url ? { images: [post.cover_image_url] } : {}),
+    },
   };
 }
 
@@ -184,8 +204,13 @@ export default async function BlogPostPage({ params }: PageProps) {
               '@context': 'https://schema.org',
               '@type': 'BlogPosting',
               headline: post.title,
+              description: post.excerpt ?? undefined,
               datePublished: post.published_at,
-              author: { '@type': 'Organization', name: 'RunningGearDB' },
+              dateModified: post.updated_at ?? post.published_at,
+              url: `https://runninggeardb.com/blog/${post.slug}`,
+              author: { '@type': 'Organization', name: 'RunningGearDB', url: 'https://runninggeardb.com' },
+              publisher: { '@type': 'Organization', name: 'RunningGearDB', url: 'https://runninggeardb.com' },
+              mainEntityOfPage: { '@type': 'WebPage', '@id': `https://runninggeardb.com/blog/${post.slug}` },
               articleBody: (post.content || '').substring(0, 500),
             }),
           }}

@@ -15,13 +15,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE = "https://runninggeardb.com";
+
 export const metadata: Metadata = {
-  title: "RunningGearDB — Gear Specs for Every Discipline",
-  description: "Filterable running gear database: shoes, vests, gels. Trail, road, Hyrox, parkrun. Compare specs, read reviews, find your gear.",
-  metadataBase: new URL("https://runninggeardb.com"),
-  icons: {
-    icon: "/favicon.svg",
+  title: {
+    default: "RunningGearDB — Running Gear Specs & Comparisons",
+    template: "%s | RunningGearDB",
   },
+  description: "The running gear database built on spec depth: every shoe, vest, and gel ranked by real numbers — drop, stack height, weight, price. Trail, road, Hyrox, ultra.",
+  metadataBase: new URL(SITE),
+  icons: { icon: "/favicon.svg" },
+  openGraph: {
+    type: "website",
+    siteName: "RunningGearDB",
+    locale: "en_US",
+    url: SITE,
+    title: "RunningGearDB — Running Gear Specs & Comparisons",
+    description: "The running gear database built on spec depth: every shoe, vest, and gel ranked by real numbers — drop, stack height, weight, price. Trail, road, Hyrox, ultra.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@runninggeardb",
+    title: "RunningGearDB — Running Gear Specs & Comparisons",
+    description: "The running gear database built on spec depth: every shoe, vest, and gel ranked by real numbers — drop, stack height, weight, price. Trail, road, Hyrox, ultra.",
+  },
+  alternates: { canonical: SITE },
 };
 
 export default function RootLayout({
@@ -52,6 +70,36 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": `${SITE}/#organization`,
+                  name: "RunningGearDB",
+                  url: SITE,
+                  logo: { "@type": "ImageObject", url: `${SITE}/favicon.svg` },
+                  sameAs: ["https://twitter.com/runninggeardb"],
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": `${SITE}/#website`,
+                  url: SITE,
+                  name: "RunningGearDB",
+                  publisher: { "@id": `${SITE}/#organization` },
+                  potentialAction: {
+                    "@type": "SearchAction",
+                    target: { "@type": "EntryPoint", urlTemplate: `${SITE}/shoes?q={search_term_string}` },
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+              ],
+            }),
+          }}
+        />
         <CurrencyProvider>
           <Nav />
           <main className="flex-1">{children}</main>

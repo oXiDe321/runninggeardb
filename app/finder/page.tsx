@@ -7,8 +7,20 @@ import { supabase } from '@/lib/supabase';
 import FinderQuiz from '@/components/finder-quiz';
 
 export const metadata: Metadata = {
-  title: 'Shoe Finder — RunningGearDB',
-  description: 'Find your running shoe in five questions. Trail, road, Hyrox. No email, no upsells.',
+  title: 'Running Shoe Finder — Find Your Shoe in 5 Questions',
+  description: 'Answer 5 quick questions about terrain, drop preference, and budget. Get matched to the best running shoes from our spec database. No email required.',
+  openGraph: {
+    type: 'website',
+    url: 'https://runninggeardb.com/finder',
+    title: 'Running Shoe Finder — Find Your Shoe in 5 Questions',
+    description: 'Answer 5 quick questions about terrain, drop preference, and budget. Get matched to the best running shoes from our spec database. No email required.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Running Shoe Finder — Find Your Shoe in 5 Questions',
+    description: 'Answer 5 quick questions about terrain, drop preference, and budget. Get matched to the best running shoes from our spec database. No email required.',
+  },
+  alternates: { canonical: 'https://runninggeardb.com/finder' },
 };
 
 export const revalidate = 300;

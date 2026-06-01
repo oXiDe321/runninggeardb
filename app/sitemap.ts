@@ -5,6 +5,7 @@
 
 import type { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
+import { BEST_PAGES } from '@/lib/best-pages';
 
 const SITE = 'https://runninggeardb.com';
 const NOW = new Date();
@@ -50,6 +51,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     { url: `${SITE}/blog`,         lastModified: NOW, changeFrequency: 'daily',   priority: 0.7 },
     { url: `${SITE}/changelog`,    lastModified: NOW, changeFrequency: 'daily',   priority: 0.5 },
+
+    // "best for" hub + individual pages
+    { url: `${SITE}/best`,         lastModified: NOW, changeFrequency: 'weekly' as const, priority: 0.85 },
+    ...BEST_PAGES.map((p) => ({
+      url: `${SITE}/best/${p.slug}`,
+      lastModified: NOW,
+      changeFrequency: 'weekly' as const,
+      priority: 0.85,
+    })),
 
     // dynamic
     ...reviews('shoes', shoes.data),
