@@ -1,25 +1,25 @@
 'use client';
-// lib/currency.tsx — Currency context: USD ↔ AUD toggle, persisted to localStorage.
-// Default is AUD (amazon.com.au affiliate links).
+// lib/currency.tsx — Currency context: AUD ↔ USD toggle, persisted to localStorage.
+// Default is AUD (amazon.com.au affiliate links). DB stores AUD values.
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 export type Currency = 'AUD' | 'USD';
 
-// Approximate exchange rate — update periodically. 1 USD ≈ 1.55 AUD.
-export const USD_TO_AUD = 1.55;
+// Approximate exchange rate — update periodically. 1 AUD ≈ 0.65 USD.
+export const AUD_TO_USD = 0.65;
 
 interface CurrencyCtx {
   currency: Currency;
   toggle: () => void;
-  fmt: (usd: number | null | undefined) => string;
+  fmt: (aud: number | null | undefined) => string;
   symbol: string;
 }
 
 const Ctx = createContext<CurrencyCtx>({
   currency: 'AUD',
   toggle: () => {},
-  fmt: (v) => (v == null ? '—' : `A$${Math.round(v * USD_TO_AUD)}`),
+  fmt: (v) => (v == null ? '—' : `A$${v}`),
   symbol: 'A$',
 });
 
@@ -41,13 +41,13 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       return next;
     });
 
-  const fmt = (usd: number | null | undefined): string => {
-    if (usd == null) return '—';
-    if (currency === 'USD') return `$${usd}`;
-    return `A$${Math.round(usd * USD_TO_AUD)}`;
+  const fmt = (aud: number | null | undefined): string => {
+    if (aud == null) return '—';
+    if (currency === 'AUD') return `A$${aud}`;
+    return `$${Math.round(aud * AUD_TO_USD)}`;
   };
 
-  const symbol = currency === 'USD' ? '$' : 'A$';
+  const symbol = currency === 'AUD' ? 'A$' : '$';
 
   return <Ctx.Provider value={{ currency, toggle, fmt, symbol }}>{children}</Ctx.Provider>;
 }

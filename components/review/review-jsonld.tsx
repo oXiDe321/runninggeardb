@@ -36,7 +36,7 @@ export default function ReviewJsonLd({
   const offers = payload.retailer_prices.map((p) => ({
     '@type': 'Offer',
     price: p.price_usd,
-    priceCurrency: 'USD',
+    priceCurrency: 'AUD',
     availability: p.in_stock
       ? 'https://schema.org/InStock'
       : 'https://schema.org/OutOfStock',
