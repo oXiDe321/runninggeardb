@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { X, Plus, ArrowLeftRight } from 'lucide-react';
 import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
+import { useCurrency } from '@/lib/currency';
+
+const PRICE_KEYS = new Set(['price_usd', 'price_per_serving']);
 
 interface Product {
   id: string;
@@ -50,6 +53,7 @@ const specsForCategory: Record<Category, { label: string; key: string; format?: 
 };
 
 export default function CompareTool({ initialProducts }: CompareToolProps) {
+  const { fmt, fmtWeight } = useCurrency();
   const [category, setCategory] = useState<Category>('shoes');
   const [selected, setSelected] = useState<Product[]>([]);
 
@@ -153,7 +157,15 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
                       </td>
                       {selected.map((product) => {
                         const val = product[spec.key];
-                        const display = val != null ? (spec.format ? spec.format(val) : String(val)) : '—';
+                        const display = val == null
+                          ? '—'
+                          : PRICE_KEYS.has(spec.key)
+                            ? fmt(val)
+                            : spec.key === 'weight_g'
+                              ? fmtWeight(val)
+                              : spec.format
+                                ? spec.format(val)
+                                : String(val);
                         const numericVal = typeof val === 'number' ? val : null;
                         const isBest = numericVal !== null && spec.key !== 'price_usd'
                           ? selected.every((p) => {

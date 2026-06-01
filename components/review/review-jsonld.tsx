@@ -15,23 +15,11 @@ export default function ReviewJsonLd({
   const reviewUrl = `${siteUrl}/reviews/${payload.slug}`;
   const productUrl = `${siteUrl}/shoes/${payload.slug}`;
 
-  const author = payload.tester
-    ? {
-        '@type': 'Person',
-        '@id': `${siteUrl}/testers/${payload.tester.slug}#person`,
-        name: payload.tester.name,
-        jobTitle: payload.tester.title ?? undefined,
-        description: payload.tester.bio ?? undefined,
-        image: payload.tester.avatar_url ?? undefined,
-        url: `${siteUrl}/testers/${payload.tester.slug}`,
-        sameAs: [payload.tester.strava_url, payload.tester.linkedin_url].filter(Boolean),
-        knowsAbout: payload.tester.credentials ?? undefined,
-      }
-    : {
-        '@type': 'Organization',
-        name: 'RunningGearDB Editors',
-        url: siteUrl,
-      };
+  const author = {
+    '@type': 'Organization',
+    name: 'RunningGearDB',
+    url: siteUrl,
+  };
 
   const offers = payload.retailer_prices.map((p) => ({
     '@type': 'Offer',
@@ -61,6 +49,16 @@ export default function ReviewJsonLd({
       image: payload.image_url ?? undefined,
       sku: payload.id,
       offers,
+      additionalProperty: [
+        payload.drop_mm != null && { '@type': 'PropertyValue', name: 'Heel-to-Toe Drop', value: `${payload.drop_mm}mm`, unitCode: 'MMT' },
+        payload.stack_heel_mm != null && { '@type': 'PropertyValue', name: 'Stack Height (heel)', value: `${payload.stack_heel_mm}mm`, unitCode: 'MMT' },
+        payload.stack_forefoot_mm != null && { '@type': 'PropertyValue', name: 'Stack Height (forefoot)', value: `${payload.stack_forefoot_mm}mm`, unitCode: 'MMT' },
+        payload.in_house_weight_g != null && { '@type': 'PropertyValue', name: 'Weight (lab verified)', value: `${payload.in_house_weight_g}g`, unitCode: 'GRM' },
+        payload.weight_g != null && { '@type': 'PropertyValue', name: 'Weight (mfr spec)', value: `${payload.weight_g}g`, unitCode: 'GRM' },
+        payload.carbon_plate && { '@type': 'PropertyValue', name: 'Carbon Plate', value: 'Yes' },
+        payload.rock_plate && { '@type': 'PropertyValue', name: 'Rock Plate', value: 'Yes' },
+        { '@type': 'PropertyValue', name: 'Discipline', value: payload.discipline },
+      ].filter(Boolean),
       ...(payload.our_rating != null
         ? {
             aggregateRating: {

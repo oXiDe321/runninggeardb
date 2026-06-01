@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Fuse from 'fuse.js';
 import type { SearchResult } from '@/lib/search-data';
+import { useCurrency } from '@/lib/currency';
 
 const FUSE_OPTS = {
   keys: [
@@ -27,6 +28,7 @@ export default function SearchPalette({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const { fmt, fmtWeight } = useCurrency();
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = useCallback(
@@ -181,7 +183,7 @@ export default function SearchPalette({
                     <span className="truncate font-mono text-[14px]">{r.model}</span>
                   </div>
                   <div className={`mt-0.5 flex gap-3 font-mono text-[10px] ${i === cursor ? 'text-ink-30' : 'text-ink-50'}`}>
-                    {r.weight_g && <span>{r.weight_g}g</span>}
+                    {r.weight_g && <span>{fmtWeight(r.weight_g)}</span>}
                     {r.drop_mm && <span>{r.drop_mm}mm</span>}
                     {r.discipline && <span>{r.discipline}</span>}
                     <span className="ml-auto">{KIND_LABEL[r.kind]}</span>
@@ -197,7 +199,7 @@ export default function SearchPalette({
                   )}
                   {r.price_usd && (
                     <span className={`font-mono text-[11px] ${i === cursor ? 'text-sand' : 'text-ink-70'}`}>
-                      ${r.price_usd}
+                      {fmt(r.price_usd)}
                     </span>
                   )}
                 </div>

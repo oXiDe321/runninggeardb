@@ -3,6 +3,7 @@
 
 import { affiliateUrl } from '@/lib/amazon';
 import type { RetailerPrice } from '@/lib/review-types';
+import PriceDisplay from '@/components/price-display';
 
 export default function RetailerList({
   prices,
@@ -28,12 +29,13 @@ export default function RetailerList({
       </div>
 
       <div className="mt-1.5 flex items-baseline gap-2.5">
-        <span className="font-display text-[56px] font-semibold leading-none tracking-[-0.04em]">
-          ${best.price_usd}
-        </span>
+        <PriceDisplay
+          usd={best.price_usd}
+          className="font-display text-[56px] font-semibold leading-none tracking-[-0.04em]"
+        />
         {msrp && best.price_usd < msrp && (
           <>
-            <span className="font-mono text-[13px] text-ink-30 line-through">${msrp}</span>
+            <PriceDisplay usd={msrp} className="font-mono text-[13px] text-ink-30 line-through" />
             <span className="ml-auto font-mono text-[11px] text-ochre">−{discountPct}%</span>
           </>
         )}
@@ -59,7 +61,7 @@ export default function RetailerList({
               className="grid grid-cols-[1fr_auto_auto] gap-2 rounded-[3px] bg-carbon-80 px-2.5 py-[7px] font-mono text-[11.5px]"
             >
               <span className="capitalize">{p.retailer}</span>
-              <span>${p.price_usd}</span>
+              <PriceDisplay usd={p.price_usd} />
               <span className={p.stock_label?.includes('low') ? 'text-ochre' : 'text-moss'}>
                 ● {p.stock_label ?? (p.in_stock ? 'in stock' : 'out')}
               </span>

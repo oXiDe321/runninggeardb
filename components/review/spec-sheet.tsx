@@ -2,7 +2,10 @@
 // Full-width data sheet grouped by spec category.
 // Server-compatible — no client hooks.
 
+import type { ReactNode } from 'react';
 import type { DimensionScore } from '@/lib/review-types';
+import PriceDisplay from '@/components/price-display';
+import WeightDisplay from '@/components/weight-display';
 
 interface Props {
   drop_mm: number | null;
@@ -16,14 +19,10 @@ interface Props {
   best_price: number | null;
   discipline: string | null;
   released_at: string | null;
-  tester: string | null;
-  miles_tested: number | null;
-  weeks_tested: number | null;
-  test_terrain: string | null;
   dimensions: DimensionScore[];
 }
 
-function Spec({ label, value }: { label: string; value: string }) {
+function Spec({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex items-baseline gap-1.5 font-mono text-[13px]">
       <span className="text-ink-50 text-[11px]">{label}</span>
@@ -36,13 +35,13 @@ export default function SpecSheet(props: Props) {
   const {
     drop_mm, weight_g, in_house_weight_g, stack_heel_mm, stack_forefoot_mm,
     carbon_plate, rock_plate, msrp_usd, best_price, discipline, released_at,
-    tester, miles_tested, weeks_tested, test_terrain, dimensions,
+    dimensions,
   } = props;
 
-  const weightStr = in_house_weight_g
-    ? `${in_house_weight_g}g · in-house`
-    : weight_g
-      ? `${weight_g}g`
+  const weightNode: ReactNode = in_house_weight_g
+    ? <><WeightDisplay grams={in_house_weight_g} /> · in-house</>
+    : weight_g != null
+      ? <WeightDisplay grams={weight_g} />
       : null;
 
   const stackStr = stack_heel_mm != null
@@ -53,12 +52,12 @@ export default function SpecSheet(props: Props) {
     ? Math.round(((msrp_usd - best_price) / msrp_usd) * 100)
     : null;
 
-  const specs: { group: string; items: [string, string | null][] }[] = [
+  const specs: { group: string; items: [string, ReactNode | null][] }[] = [
     {
       group: 'dimensions',
       items: [
         ['drop', drop_mm != null ? `${drop_mm}mm` : null],
-        ['weight', weightStr],
+        ['weight', weightNode],
         ['stack', stackStr],
       ],
     },
@@ -74,18 +73,9 @@ export default function SpecSheet(props: Props) {
     {
       group: 'pricing',
       items: [
-        ['MSRP', msrp_usd ? `$${msrp_usd}` : null],
-        ['current best', best_price ? `$${best_price}` : null],
+        ['MSRP', msrp_usd ? <PriceDisplay usd={msrp_usd} /> : null],
+        ['current best', best_price ? <PriceDisplay usd={best_price} /> : null],
         ['saving', discountPct != null ? `${discountPct}% off` : null],
-      ],
-    },
-    {
-      group: 'testing',
-      items: [
-        ['tester', tester],
-        ['miles', miles_tested != null ? `${miles_tested} mi` : null],
-        ['weeks', weeks_tested != null ? `${weeks_tested} wks` : null],
-        ['terrain', test_terrain],
       ],
     },
   ];

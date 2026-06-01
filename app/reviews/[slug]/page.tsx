@@ -12,16 +12,19 @@ import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
 
 import DisclosureStrip from '@/components/review/disclosure-strip';
 import ScorePanel from '@/components/review/score-panel';
-import TesterByline from '@/components/review/tester-byline';
 import BestForMatrix from '@/components/review/best-for-matrix';
 import RetailerList from '@/components/review/retailer-list';
 import PriceHistory from '@/components/review/price-history';
-import CommunityQuotes from '@/components/review/community-quotes';
-import AiTransparency from '@/components/review/ai-transparency';
 import StickyBuyBar from '@/components/review/sticky-buy-bar';
 import ReviewProse from '@/components/review/review-prose';
 import ReviewJsonLd from '@/components/review/review-jsonld';
 import SpecSheet from '@/components/review/spec-sheet';
+import PriceDisplay from '@/components/price-display';
+import WeightDisplay from '@/components/weight-display';
+
+// Re-render at most once per hour so fresh Amazon prices propagate after the
+// daily cron calls revalidatePath('/reviews', 'layout').
+export const revalidate = 3600;
 
 const SITE_URL = 'https://runninggeardb.com';
 
@@ -38,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${review.brand} ${review.model} Review — ${review.our_rating ?? '—'}/10 · RunningGearDB`;
   const description =
     review.tagline ??
-    `${review.brand} ${review.model}: in-depth review, full specs, live retailer prices.${review.miles_tested ? ` Tested over ${review.miles_tested} miles.` : ''}`;
+    `${review.brand} ${review.model}: in-depth review, full specs, and live retailer prices.`;
   const url = `${SITE_URL}/reviews/${review.slug}`;
 
   return {
@@ -136,8 +139,6 @@ export default async function ReviewPage({ params }: PageProps) {
                       .replace(/ /g, '-')}
                   </>
                 )}
-                {r.miles_tested != null && <> · {r.miles_tested} MI</>}
-                {r.peer_reviewer_count > 0 && <> · {r.peer_reviewer_count + 1} TESTERS</>}
               </div>
               <h1 className="m-0 font-display text-[40px] font-semibold leading-[0.96] tracking-[-0.04em] sm:text-[56px] lg:text-[72px]">
                 {r.brand} <span className="text-rust">{r.model}.</span>
@@ -171,10 +172,6 @@ export default async function ReviewPage({ params }: PageProps) {
         best_price={buyPrice}
         discipline={r.discipline}
         released_at={r.released_at}
-        tester={r.tester?.name ?? null}
-        miles_tested={r.miles_tested}
-        weeks_tested={r.weeks_tested}
-        test_terrain={r.test_terrain}
         dimensions={r.dimensions}
       />
 
@@ -182,16 +179,6 @@ export default async function ReviewPage({ params }: PageProps) {
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-0 border-b border-rule lg:grid-cols-[1.55fr_1fr]">
         {/* LEFT */}
         <article className="border-b border-rule px-4 pb-10 pt-6 sm:px-6 lg:border-b-0 lg:border-r lg:px-8">
-          {r.tester && (
-            <TesterByline
-              tester={r.tester}
-              milesTested={r.miles_tested}
-              weeksTested={r.weeks_tested}
-              testTerrain={r.test_terrain}
-              peerReviewers={r.peer_reviewer_count}
-            />
-          )}
-
           <BestForMatrix bestFor={r.best_for} notFor={r.not_for} />
 
           {r.image_url && (
@@ -205,11 +192,6 @@ export default async function ReviewPage({ params }: PageProps) {
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
-              <figcaption className="mt-2 font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-50">
-                Fig. 01 · Unit tested
-                {r.miles_tested != null && <> · {r.miles_tested} mi</>}
-                {r.test_terrain && <> · {r.test_terrain}</>}
-              </figcaption>
             </figure>
           )}
 
@@ -271,9 +253,9 @@ export default async function ReviewPage({ params }: PageProps) {
                       <span className="text-ink-50">{c.brand}</span> {c.model}
                       {c.self && <span className="ml-1.5 text-rust">★ this</span>}
                     </span>
-                    <span className="text-right">{c.weight_g}g</span>
+                    <WeightDisplay grams={c.weight_g} className="text-right" />
                     <span className="text-right">{c.drop_mm}mm</span>
-                    <span className="text-right">${c.price_usd}</span>
+                    <PriceDisplay usd={c.price_usd} className="text-right" />
                     <span className={`text-right ${c.self ? 'font-semibold text-rust' : ''}`}>
                       {c.our_rating}
                     </span>
@@ -282,8 +264,6 @@ export default async function ReviewPage({ params }: PageProps) {
               </div>
             </section>
           )}
-
-          <CommunityQuotes quotes={r.quotes} />
 
           {r.faqs.length > 0 && (
             <section className="mt-8">
@@ -305,16 +285,6 @@ export default async function ReviewPage({ params }: PageProps) {
             </section>
           )}
 
-          <AiTransparency
-            tester={r.tester}
-            editor={r.human_editor}
-            milesTested={r.miles_tested}
-            weeksTested={r.weeks_tested}
-            testTerrain={r.test_terrain}
-            aiDraftedAt={r.ai_drafted_at}
-            humanEditedAt={r.human_edited_at}
-            reviewId={r.id}
-          />
         </article>
 
         {/* RIGHT RAIL */}

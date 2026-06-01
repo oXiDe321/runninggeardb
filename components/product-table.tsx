@@ -206,7 +206,7 @@ function UnifiedTable({
   sort: { key: string; dir: 'asc' | 'desc' };
   setSort: (s: { key: string; dir: 'asc' | 'desc' }) => void;
 }) {
-  const { fmt, symbol } = useCurrency();
+  const { fmt, fmtWeight, symbol } = useCurrency();
   const colWidths = cols.map((c) => c.width).join(' ');
   const desktopGridCols = `40px 56px 2fr ${colWidths} 90px 120px`;
 
@@ -221,14 +221,14 @@ function UnifiedTable({
     if (category === 'shoes') {
       return [
         p.drop_mm != null ? `${p.drop_mm}mm drop` : null,
-        p.weight_g != null ? `${p.weight_g}g` : null,
+        p.weight_g != null ? fmtWeight(p.weight_g) : null,
         fmt(p.price_usd),
       ].filter(Boolean).join(' · ');
     }
     if (category === 'vests') {
       return [
         p.capacity_l != null ? `${p.capacity_l}L` : null,
-        p.weight_g != null ? `${p.weight_g}g` : null,
+        p.weight_g != null ? fmtWeight(p.weight_g) : null,
         fmt(p.price_usd),
       ].filter(Boolean).join(' · ');
     }
@@ -355,16 +355,28 @@ function UnifiedTable({
                   </div>
                 )}
               </div>
-              {cols.map((c) => (
-                <span key={c.key} className="text-right font-mono text-[13px]">
-                  {c.key === 'price_usd' || c.key === 'price_per_serving'
-                    ? fmt(p[c.key])
-                    : p[c.key] ?? '—'}
-                  {c.unit && c.key !== 'price_usd' && c.key !== 'price_per_serving' && (
-                    <span className="text-ink-50">{c.unit}</span>
-                  )}
-                </span>
-              ))}
+              {cols.map((c) => {
+                if (c.key === 'price_usd' || c.key === 'price_per_serving') {
+                  return (
+                    <span key={c.key} className="text-right font-mono text-[13px]">
+                      {fmt(p[c.key])}
+                    </span>
+                  );
+                }
+                if (c.key === 'weight_g') {
+                  return (
+                    <span key={c.key} className="text-right font-mono text-[13px]">
+                      {p.weight_g != null ? fmtWeight(p.weight_g) : '—'}
+                    </span>
+                  );
+                }
+                return (
+                  <span key={c.key} className="text-right font-mono text-[13px]">
+                    {p[c.key] ?? '—'}
+                    {c.unit && <span className="text-ink-50">{c.unit}</span>}
+                  </span>
+                );
+              })}
               <div className="flex justify-end">
                 <ScoreCircle score={Number(p.our_rating ?? 0)} />
               </div>
@@ -472,7 +484,7 @@ function ScoreCircle({ score }: { score: number }) {
 // ── grid-mode card ────────────────────────────────────────────────
 
 function ProductCard({ product, category }: { product: Product; category: Category }) {
-  const { fmt, symbol } = useCurrency();
+  const { fmt, fmtWeight, symbol } = useCurrency();
   const name = product.model ?? product.product;
   return (
     <Link
@@ -495,7 +507,7 @@ function ProductCard({ product, category }: { product: Product; category: Catego
           {category === 'shoes' && (
             <>
               <Spec label="drop" value={product.drop_mm ? `${product.drop_mm}mm` : '—'} />
-              <Spec label="weight" value={product.weight_g ? `${product.weight_g}g` : '—'} />
+              <Spec label="weight" value={product.weight_g ? fmtWeight(product.weight_g) : '—'} />
               <Spec label="stack" value={product.stack_heel_mm ? `${product.stack_heel_mm}mm` : '—'} />
               <Spec label={symbol} value={fmt(product.price_usd)} />
             </>
@@ -503,7 +515,7 @@ function ProductCard({ product, category }: { product: Product; category: Catego
           {category === 'vests' && (
             <>
               <Spec label="capacity" value={product.capacity_l ? `${product.capacity_l}L` : '—'} />
-              <Spec label="weight" value={product.weight_g ? `${product.weight_g}g` : '—'} />
+              <Spec label="weight" value={product.weight_g ? fmtWeight(product.weight_g) : '—'} />
               <Spec label="UTMB" value={product.utmb_compliant ? 'yes' : 'no'} />
               <Spec label={symbol} value={fmt(product.price_usd)} />
             </>

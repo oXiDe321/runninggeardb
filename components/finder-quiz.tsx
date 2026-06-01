@@ -6,6 +6,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
+import { useCurrency } from '@/lib/currency';
 
 interface Shoe {
   id: string;
@@ -89,6 +90,7 @@ const QUESTIONS = [
 ];
 
 export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
+  const { fmt, fmtWeight } = useCurrency();
   const [shoes] = useState<Shoe[]>(initialShoes);
   const [answers, setAnswers] = useState<AnswerState>({
     terrain: null,
@@ -149,8 +151,7 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
           </h1>
           <p className="mt-3 max-w-[720px] font-mono text-[14px] text-ink-70">
             Five hard filters narrow {counts.pool} SKU down to three shoes that match how you
-            actually run. No quiz-funnel emails, no upsells. Every shoe in the shortlist is
-            human-tested.
+            actually run. No quiz-funnel emails, no upsells.
           </p>
         </div>
       </header>
@@ -335,7 +336,7 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
                       {s.model}
                     </div>
                     <div className="mt-0.5 font-mono text-[10.5px] text-ink-50">
-                      {s.weight_g}g · {s.drop_mm}mm · ${s.price_usd}
+                      {fmtWeight(s.weight_g)} · {s.drop_mm}mm · {fmt(s.price_usd)}
                     </div>
                   </div>
                   <div className="grid h-11 w-11 place-items-center rounded-full border border-rust font-display text-[14px] font-semibold text-rust">
@@ -365,10 +366,7 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
             </span>
             <p className="mt-2 font-mono text-[11.5px] leading-[1.6]">
               We don&apos;t serve you store-filter results dressed up as a quiz. Every shoe in
-              the shortlist has been{' '}
-              <span className="text-ochre">purchased at MSRP</span>,{' '}
-              <span className="text-ochre">tested 100+ mi</span>, and{' '}
-              <span className="text-ochre">reviewed by a human</span>.
+              the shortlist comes from our spec database — real numbers, no sponsored placements.
             </p>
           </div>
         </aside>

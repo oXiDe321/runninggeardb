@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { affiliateUrl } from '@/lib/amazon';
+import { useCurrency } from '@/lib/currency';
 
 interface Props {
   brand: string;
@@ -29,6 +30,7 @@ export default function StickyBuyBar({
   image,
 }: Props) {
   const [shown, setShown] = useState(false);
+  const { fmt } = useCurrency();
 
   useEffect(() => {
     const onScroll = () => setShown(window.scrollY > 520);
@@ -66,7 +68,7 @@ export default function StickyBuyBar({
         <span className="hidden font-mono text-[11.5px] text-ink-30 md:inline">{retailer} · live</span>
         {price != null && (
           <span className="font-display text-[22px] font-semibold tracking-[-0.03em] sm:text-[30px]">
-            ${price}
+            {fmt(price)}
           </span>
         )}
         <a

@@ -2,9 +2,21 @@ import CategoryPage from '@/components/category-page';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Running Vests & Packs — RunningGearDB',
+  title: 'Trail Running Vests & Packs — Compare Capacity, Weight & Compliance',
   description:
-    'Filterable database of trail running vests. UTMB compliant, ultra-rated, compare capacity, weight, pockets.',
+    'Filter trail running vests and hydration packs by capacity, weight, UTMB compliance, and price. Spec data for every model.',
+  openGraph: {
+    type: 'website',
+    url: 'https://runninggeardb.com/vests',
+    title: 'Trail Running Vests & Packs — Compare Capacity, Weight & Compliance',
+    description: 'Filter trail running vests and hydration packs by capacity, weight, UTMB compliance, and price. Spec data for every model.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Trail Running Vests & Packs — Compare Capacity, Weight & Compliance',
+    description: 'Filter trail running vests and hydration packs by capacity, weight, UTMB compliance, and price. Spec data for every model.',
+  },
+  alternates: { canonical: 'https://runninggeardb.com/vests' },
 };
 
 export default function VestsPage() {
