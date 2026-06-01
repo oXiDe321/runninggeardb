@@ -27,6 +27,13 @@ const nextConfig: NextConfig = {
       { hostname: "maurten.com" },
       { hostname: "www.scienceinsport.com" },
       { hostname: "images.runningwarehouse.com" },
+      { hostname: "www.thenorthface.com.au" },
+      { hostname: "www.osprey.com" },
+      { hostname: "www.blackdiamondequipment.com" },
+      { hostname: "www.ultimatedirection.com" },
+      { hostname: "www.raidlight.com" },
+      { hostname: "www.arcteryx.com" },
+      { hostname: "www.patagonia.com" },
     ],
   },
 };
