@@ -1,258 +1,188 @@
 // scripts/fetch-prices.ts
-// Daily cron — fetches current price for every (product, retailer) pair
-// and (1) upserts retailer_prices for the live "best price" widget,
-// (2) inserts a row into price_history for the sparkline.
+// Daily cron — fetches live Amazon AU prices for every product with an amazon_url.
+// Updates retailer_prices (for the "best price" widget) and inserts into
+// price_history (for the 90-day sparkline).
 //
-// Run with: `tsx scripts/fetch-prices.ts`
-// Schedule with: Vercel Cron, GitHub Actions, or Supabase Edge Functions.
+// Run: npx tsx scripts/fetch-prices.ts
+// Cron: vercel crons (configured in vercel.json)
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+
+dotenv.config({ path: '.env.local' });
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-interface RetailerRow {
-  id: string;
-  product_table: 'shoes' | 'vests' | 'gels';
-  product_id: string;
-  retailer: string;
-  url: string;
-  price_usd: number;
+const DELAY_MS = 2000; // polite delay between Amazon requests
+const TIMEOUT_MS = 12000;
+
+// ── Amazon AU price scraper ──────────────────────────────────────
+
+function cleanPrice(raw: string): number | null {
+  const n = parseFloat(raw.replace(/,/g, ''));
+  return n > 0 ? n : null;
 }
 
-interface PriceProbe {
-  price_usd: number;
+/**
+ * Extract the main product price from an Amazon AU product page.
+ * All prices are in AUD. We want the "buy box" price — not Subscribe & Save,
+ * not installment amounts.
+ */
+async function scrapeAmazonPrice(url: string): Promise<{
+  price_aud: number;
   in_stock: boolean;
-  stock_label: string;
-}
-
-// ── Real price fetchers ──────────────────────────────────────────
-
-async function fetchAmazonPrice(url: string): Promise<PriceProbe | null> {
+} | null> {
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-AU,en;q=0.9',
+        'Accept': 'text/html,application/xhtml+xml',
       },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     });
+
     if (!res.ok) return null;
     const html = await res.text();
 
-    // Amazon embeds price in several well-known DOM patterns.
-    // Try core price selectors in order of reliability.
-    const patterns = [
-      /"priceblock_ourprice"[^>]*>\s*\$?([\d,.]+)/i,
-      /"priceblock_dealprice"[^>]*>\s*\$?([\d,.]+)/i,
-      /data-asin-price="([\d.]+)"/i,
-      /<span[^>]*class="a-price"[^>]*>.*?<span[^>]*class="a-offscreen"[^>]*>\$?([\d,.]+)<\/span>/is,
-      /"priceValue":"([\d.]+)"/i,
-    ];
+    // Strategy: find all a-offscreen price spans in order.
+    // The main product price is typically the first one.
+    // Skip obviously-wrong amounts (< $10 is likely a different currency or
+    // shipping, > $5000 is an error).
+    const priceRegex = /<span class="a-offscreen"[^>]*>\$?([\d,.]+)<\/span>/gi;
+    const candidates: number[] = [];
 
-    for (const re of patterns) {
-      const m = html.match(re);
-      if (m) {
-        const price = parseFloat(m[1].replace(/,/g, ''));
-        if (price > 0) {
-          const inStock =
-            !/currently unavailable|out of stock/i.test(html);
-          return {
-            price_usd: price,
-            in_stock: inStock,
-            stock_label: inStock ? 'in stock' : 'out',
-          };
-        }
+    let m;
+    while ((m = priceRegex.exec(html)) !== null) {
+      const p = cleanPrice(m[1]);
+      if (p !== null && p >= 10 && p <= 5000) {
+        candidates.push(p);
       }
     }
-    return null;
+
+    if (candidates.length === 0) return null;
+
+    // The main product price appears first in the DOM
+    const price = candidates[0];
+
+    const outOfStock = /currently unavailable|out of stock|temporarily out/i.test(html);
+    const inStock = /In Stock|Add to Cart|Buy Now/i.test(html);
+
+    return {
+      price_aud: price,
+      in_stock: inStock || (!outOfStock && candidates.length > 0),
+    };
   } catch {
     return null;
   }
 }
 
-async function fetchRunningWarehousePrice(url: string): Promise<PriceProbe | null> {
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) return null;
-    const html = await res.text();
+// ── Main ──────────────────────────────────────────────────────────
 
-    // Running Warehouse renders price in a few known patterns.
-    const patterns = [
-      /<span[^>]*class="price"[^>]*>\s*\$?([\d,.]+)/i,
-      /<meta[^>]*itemprop="price"[^>]*content="([\d.]+)"/i,
-      /data-price="([\d.]+)"/i,
-      /"price"\s*:\s*"?([\d.]+)"?/i,
-    ];
-
-    for (const re of patterns) {
-      const m = html.match(re);
-      if (m) {
-        const price = parseFloat(m[1].replace(/,/g, ''));
-        if (price > 0) {
-          const inStock = !/out of stock|notify me|backorder/i.test(html);
-          return {
-            price_usd: price,
-            in_stock: inStock,
-            stock_label: inStock ? 'in stock' : 'out',
-          };
-        }
-      }
-    }
-    return null;
-  } catch {
-    return null;
-  }
+function sleep(ms: number) {
+  return new Promise(r => setTimeout(r, ms));
 }
 
-async function fetchReiPrice(url: string): Promise<PriceProbe | null> {
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) return null;
-    const html = await res.text();
-
-    // REI uses JSON-LD for product pricing.
-    const ldJson = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
-    let m: RegExpExecArray | null;
-    while ((m = ldJson.exec(html)) !== null) {
-      try {
-        const data = JSON.parse(m[1]);
-        if (data['@type'] === 'Product' || (Array.isArray(data['@graph']) && data['@graph'].some((n: any) => n['@type'] === 'Product'))) {
-          const product = data['@type'] === 'Product' ? data : data['@graph'].find((n: any) => n['@type'] === 'Product');
-          if (product?.offers) {
-            const offer = Array.isArray(product.offers) ? product.offers[0] : product.offers;
-            const price = parseFloat(offer.price);
-            if (price > 0) {
-              const availability = offer.availability || '';
-              const inStock = /instock|in_stock|onlineonly/i.test(availability);
-              return {
-                price_usd: price,
-                in_stock: inStock,
-                stock_label: inStock ? 'in stock' : 'out',
-              };
-            }
-          }
-        }
-      } catch { /* skip malformed JSON */ }
-    }
-
-    // Fallback: REI product page regex
-    const priceRe = /"salePrice"\s*:\s*([\d.]+)/i;
-    const pm = html.match(priceRe);
-    if (pm) {
-      const price = parseFloat(pm[1]);
-      if (price > 0) {
-        return {
-          price_usd: price,
-          in_stock: true,
-          stock_label: 'in stock',
-        };
-      }
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function probeFor(retailer: string) {
-  if (retailer === 'amazon') return fetchAmazonPrice;
-  if (retailer === 'rei') return fetchReiPrice;
-  if (retailer === 'running-warehouse') return fetchRunningWarehousePrice;
-  return null;
-}
-
-// ── Main ────────────────────────────────────────────────────────
 async function main() {
   const start = Date.now();
-  console.log('[prices] starting daily fetch…');
+  console.log('[prices] fetching Amazon AU prices...\n');
 
-  const { data: rows, error } = await supabase
+  // Get all products with Amazon URLs
+  const { data: products } = await supabase
     .from('retailer_prices')
-    .select('id, product_table, product_id, retailer, url, price_usd');
+    .select('id, product_table, product_id, retailer, url, price_usd')
+    .eq('retailer', 'amazon')
+    .order('product_table');
 
-  if (error) {
-    console.error('[prices] failed to load retailer_prices:', error);
-    process.exit(1);
+  if (!products || products.length === 0) {
+    console.log('[prices] no products with Amazon URLs found.');
+    return;
   }
 
-  let updated = 0;
-  let skipped = 0;
+  console.log(`[prices] ${products.length} products to check\n`);
+
   const today = new Date().toISOString().slice(0, 10);
+  let updated = 0;
+  let unchanged = 0;
+  let failed = 0;
+  let priceChanges = 0;
 
-  for (const row of rows as RetailerRow[]) {
-    const probe = probeFor(row.retailer);
-    if (!probe) {
-      skipped++;
-      continue;
+  for (let i = 0; i < products.length; i++) {
+    const row = products[i];
+    const pct = Math.round((i / products.length) * 100);
+
+    if (i > 0 && i % 20 === 0) {
+      console.log(`   ... ${i}/${products.length} (${pct}%) updated=${updated} failed=${failed}`);
     }
 
-    const result = await probe(row.url);
+    const result = await scrapeAmazonPrice(row.url);
+    await sleep(DELAY_MS);
+
     if (!result) {
-      skipped++;
+      failed++;
       continue;
     }
 
-    // 1. Update the live "best price" row.
-    await supabase
+    const oldPrice = Number(row.price_usd);
+
+    // Update retailer_prices live row
+    const { error: updateErr } = await supabase
       .from('retailer_prices')
       .update({
-        price_usd: result.price_usd,
+        price_usd: result.price_aud,
         in_stock: result.in_stock,
-        stock_label: result.stock_label,
+        stock_label: result.in_stock ? 'in stock' : 'out',
         checked_at: new Date().toISOString(),
       })
       .eq('id', row.id);
 
-    // 2. Insert a history row (one per retailer per day; UNIQUE constraint
-    //    means re-runs the same day no-op).
+    if (updateErr) {
+      failed++;
+      continue;
+    }
+
+    // Insert price history point
     await supabase
       .from('price_history')
       .upsert(
         {
           product_table: row.product_table,
           product_id: row.product_id,
-          retailer: row.retailer,
-          price_usd: result.price_usd,
+          retailer: 'amazon',
+          price_usd: result.price_aud,
           observed_on: today,
         },
         { onConflict: 'product_table,product_id,retailer,observed_on' }
       );
 
-    // 3. If price changed, log it to the public changelog.
-    if (Math.abs(result.price_usd - Number(row.price_usd)) > 0.01) {
+    // Log significant price changes to changelog
+    if (oldPrice > 0 && Math.abs(result.price_aud - oldPrice) > 1) {
+      priceChanges++;
       await supabase.from('changelog').insert({
         kind: 'price',
         product_table: row.product_table,
         product_id: row.product_id,
-        summary: `price · ${row.retailer} · $${row.price_usd} → $${result.price_usd}`,
+        summary: `price: amazon A$${oldPrice.toFixed(0)} → A$${result.price_aud.toFixed(0)}`,
         actor: 'cron/fetch-prices',
       });
     }
 
-    updated++;
+    if (oldPrice > 0 && Math.abs(result.price_aud - oldPrice) < 1) {
+      unchanged++;
+    } else {
+      updated++;
+    }
   }
 
-  console.log(
-    `[prices] done in ${(Date.now() - start) / 1000}s — updated ${updated}, skipped ${skipped}`
-  );
+  const elapsed = ((Date.now() - start) / 1000).toFixed(0);
+  console.log(`\n[prices] done in ${elapsed}s`);
+  console.log(`  updated: ${updated}`);
+  console.log(`  unchanged: ${unchanged}`);
+  console.log(`  failed: ${failed}`);
+  console.log(`  price changes logged: ${priceChanges}`);
 }
 
 main().catch((e) => {
