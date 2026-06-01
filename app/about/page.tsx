@@ -19,8 +19,8 @@ export default function AboutPage() {
           <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-30 mb-2">What we do</h2>
           <p>
             We collect manufacturer specs, verify weights and dimensions in-house, track prices
-            across retailers, and publish structured reviews written by named testers. Each review
-            is AI-drafted from testing notes and spec data, then edited by a human before publication.
+            across retailers, and publish structured reviews generated from spec data. Every score,
+            price, and data point is sourced and logged to the public changelog.
           </p>
         </div>
 

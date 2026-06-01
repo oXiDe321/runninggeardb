@@ -15,23 +15,11 @@ export default function ReviewJsonLd({
   const reviewUrl = `${siteUrl}/reviews/${payload.slug}`;
   const productUrl = `${siteUrl}/shoes/${payload.slug}`;
 
-  const author = payload.tester
-    ? {
-        '@type': 'Person',
-        '@id': `${siteUrl}/testers/${payload.tester.slug}#person`,
-        name: payload.tester.name,
-        jobTitle: payload.tester.title ?? undefined,
-        description: payload.tester.bio ?? undefined,
-        image: payload.tester.avatar_url ?? undefined,
-        url: `${siteUrl}/testers/${payload.tester.slug}`,
-        sameAs: [payload.tester.strava_url, payload.tester.linkedin_url].filter(Boolean),
-        knowsAbout: payload.tester.credentials ?? undefined,
-      }
-    : {
-        '@type': 'Organization',
-        name: 'RunningGearDB Editors',
-        url: siteUrl,
-      };
+  const author = {
+    '@type': 'Organization',
+    name: 'RunningGearDB',
+    url: siteUrl,
+  };
 
   const offers = payload.retailer_prices.map((p) => ({
     '@type': 'Offer',

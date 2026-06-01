@@ -149,8 +149,7 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
           </h1>
           <p className="mt-3 max-w-[720px] font-mono text-[14px] text-ink-70">
             Five hard filters narrow {counts.pool} SKU down to three shoes that match how you
-            actually run. No quiz-funnel emails, no upsells. Every shoe in the shortlist is
-            human-tested.
+            actually run. No quiz-funnel emails, no upsells.
           </p>
         </div>
       </header>
@@ -365,10 +364,7 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
             </span>
             <p className="mt-2 font-mono text-[11.5px] leading-[1.6]">
               We don&apos;t serve you store-filter results dressed up as a quiz. Every shoe in
-              the shortlist has been{' '}
-              <span className="text-ochre">purchased at MSRP</span>,{' '}
-              <span className="text-ochre">tested 100+ mi</span>, and{' '}
-              <span className="text-ochre">reviewed by a human</span>.
+              the shortlist comes from our spec database — real numbers, no sponsored placements.
             </p>
           </div>
         </aside>

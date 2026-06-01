@@ -10,7 +10,7 @@ export default function ContactPage() {
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
       <h1 className="text-3xl font-bold tracking-tight text-carbon mb-2">Contact</h1>
       <p className="text-ink-50 mb-10 text-sm leading-relaxed">
-        Questions, corrections, or want to become a tester? We read every message.
+        Questions or corrections? We read every message.
       </p>
 
       <div className="space-y-6 text-sm leading-relaxed text-ink-70">
@@ -29,14 +29,6 @@ export default function ContactPage() {
           </p>
         </div>
 
-        <div>
-          <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-30 mb-2">Become a tester</h2>
-          <p>
-            We are looking for runners who log 100+ trail or road miles per month and can
-            provide structured testing notes. Email with "tester" in the subject and include
-            a link to your Strava profile.
-          </p>
-        </div>
       </div>
     </div>
   );

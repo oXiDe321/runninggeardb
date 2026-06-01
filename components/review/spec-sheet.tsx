@@ -16,10 +16,6 @@ interface Props {
   best_price: number | null;
   discipline: string | null;
   released_at: string | null;
-  tester: string | null;
-  miles_tested: number | null;
-  weeks_tested: number | null;
-  test_terrain: string | null;
   dimensions: DimensionScore[];
 }
 
@@ -36,7 +32,7 @@ export default function SpecSheet(props: Props) {
   const {
     drop_mm, weight_g, in_house_weight_g, stack_heel_mm, stack_forefoot_mm,
     carbon_plate, rock_plate, msrp_usd, best_price, discipline, released_at,
-    tester, miles_tested, weeks_tested, test_terrain, dimensions,
+    dimensions,
   } = props;
 
   const weightStr = in_house_weight_g
@@ -77,15 +73,6 @@ export default function SpecSheet(props: Props) {
         ['MSRP', msrp_usd ? `$${msrp_usd}` : null],
         ['current best', best_price ? `$${best_price}` : null],
         ['saving', discountPct != null ? `${discountPct}% off` : null],
-      ],
-    },
-    {
-      group: 'testing',
-      items: [
-        ['tester', tester],
-        ['miles', miles_tested != null ? `${miles_tested} mi` : null],
-        ['weeks', weeks_tested != null ? `${weeks_tested} wks` : null],
-        ['terrain', test_terrain],
       ],
     },
   ];
