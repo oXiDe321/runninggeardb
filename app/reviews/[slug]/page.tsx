@@ -22,6 +22,10 @@ import SpecSheet from '@/components/review/spec-sheet';
 import PriceDisplay from '@/components/price-display';
 import WeightDisplay from '@/components/weight-display';
 
+// Re-render at most once per hour so fresh Amazon prices propagate after the
+// daily cron calls revalidatePath('/reviews', 'layout').
+export const revalidate = 3600;
+
 const SITE_URL = 'https://runninggeardb.com';
 
 interface PageProps {
