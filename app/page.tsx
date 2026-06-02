@@ -214,7 +214,7 @@ export default async function HomePage() {
                 {/* Mobile row */}
                 <Link href={`/reviews/${s.slug}`} className="flex items-center gap-3 px-3 py-3 no-underline md:hidden">
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[3px] bg-sand-deep">
-                    {s.image_url && <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="(max-width: 768px) 56px, 44px" quality={90} />}
+                    {s.image_url && <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="(max-width: 768px) 56px, 44px" quality={100} />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-50">
@@ -226,8 +226,8 @@ export default async function HomePage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <div className="text-[20px] font-bold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
-                      {s.our_rating}<span className="font-mono font-normal text-[9px] text-ink-50">/10</span>
+                    <div className="text-[20px] font-bold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: i === 0 ? '#c4582c' : '#111' }}>
+                      {s.our_rating}<span style={{ fontFamily: 'monospace', fontSize: '9px', color: '#7a7466' }}>/10</span>
                     </div>
                     <span className="rounded-[3px] bg-carbon px-2.5 py-1 font-mono text-[10px] text-sand">BUY →</span>
                   </div>
@@ -240,7 +240,7 @@ export default async function HomePage() {
                 >
                   <span className="font-mono text-[12px] text-ink-50">{String(i + 1).padStart(2, '0')}</span>
                   <div className="relative h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
-                    {s.image_url && <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="44px" quality={90} />}
+                    {s.image_url && <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="44px" quality={100} />}
                   </div>
                   <div className="min-w-0">
                     <div className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-50">
@@ -252,8 +252,8 @@ export default async function HomePage() {
                   <span className="text-right font-mono text-[13px]">{s.weight_g}<span className="text-ink-50">g</span></span>
                   <span className="text-right font-mono text-[13px]">{s.stack_heel_mm}<span className="text-ink-50">mm</span></span>
                   <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
-                  <div className="text-right text-[22px] font-bold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
-                    {s.our_rating}<span className="ml-1 font-mono font-normal text-[10px] text-ink-50">/10</span>
+                  <div className="text-right text-[22px] font-bold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: i === 0 ? '#c4582c' : '#111' }}>
+                    {s.our_rating}<span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#7a7466' }}>/10</span>
                   </div>
                   <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
                     BUY · <PriceDisplay usd={s.price_usd} />
