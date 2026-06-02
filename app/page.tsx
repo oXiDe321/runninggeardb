@@ -1,8 +1,6 @@
-// app/page.tsx — Specs-Engine homepage.
-// Server component: live SKU counts, top-12 table, category cards,
-// changelog feed + recent price changes.
+// app/page.tsx
+// Server component: live SKU counts + top-12 table + category cards + changelog.
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import PriceDisplay from '@/components/price-display';
@@ -42,43 +40,37 @@ async function loadHome() {
     return f.length ? [Math.min(...f), Math.max(...f)] : [0, 0];
   };
 
-  const shoeStats = {
-    count: shoesRes.count ?? shoesData.length,
-    weight: range(shoesData.map((s: any) => Number(s.weight_g))),
-    drop:   range(shoesData.map((s: any) => Number(s.drop_mm))),
-    stack:  range(shoesData.map((s: any) => Number(s.stack_heel_mm))),
-    price:  range(shoesData.map((s: any) => Number(s.price_usd))),
-  };
-  const vestStats = {
-    count: vestsRes.count ?? vestsData.length,
-    cap: range(vestsData.map((s: any) => Number(s.capacity_l))),
-    weight: range(vestsData.map((s: any) => Number(s.weight_g))),
-    price: range(vestsData.map((s: any) => Number(s.price_usd))),
-  };
-  const gelStats = {
-    count: gelsRes.count ?? gelsData.length,
-    carbs: range(gelsData.map((s: any) => Number(s.carbs_per_serving_g))),
-    caffeine: range(gelsData.map((s: any) => Number(s.caffeine_mg))),
-    price: range(gelsData.map((s: any) => Number(s.price_per_serving))),
-  };
-
-  const totalCount = shoeStats.count + vestStats.count + gelStats.count;
-  const allPrices = [
-    ...shoesData.map((s: any) => Number(s.price_usd)),
-    ...vestsData.map((s: any) => Number(s.price_usd)),
-  ].filter(Number.isFinite);
-  const avgPrice =
-    allPrices.length > 0 ? (allPrices.reduce((a, b) => a + b, 0) / allPrices.length).toFixed(2) : '—';
-
   return {
-    totalCount,
-    shoeStats,
-    vestStats,
-    gelStats,
+    totalCount: (shoesRes.count ?? shoesData.length) + (vestsRes.count ?? vestsData.length) + (gelsRes.count ?? gelsData.length),
+    shoeStats: {
+      count: shoesRes.count ?? shoesData.length,
+      weight: range(shoesData.map((s: any) => Number(s.weight_g))),
+      drop:   range(shoesData.map((s: any) => Number(s.drop_mm))),
+      stack:  range(shoesData.map((s: any) => Number(s.stack_heel_mm))),
+      price:  range(shoesData.map((s: any) => Number(s.price_usd))),
+    },
+    vestStats: {
+      count: vestsRes.count ?? vestsData.length,
+      cap: range(vestsData.map((s: any) => Number(s.capacity_l))),
+      weight: range(vestsData.map((s: any) => Number(s.weight_g))),
+      price: range(vestsData.map((s: any) => Number(s.price_usd))),
+    },
+    gelStats: {
+      count: gelsRes.count ?? gelsData.length,
+      carbs: range(gelsData.map((s: any) => Number(s.carbs_per_serving_g))),
+      caffeine: range(gelsData.map((s: any) => Number(s.caffeine_mg))),
+      price: range(gelsData.map((s: any) => Number(s.price_per_serving))),
+    },
     top: topRes.data ?? [],
     changelog: changelogRes.data ?? [],
     priceLog: priceLogRes.data ?? [],
-    avgPrice,
+    avgPrice: (() => {
+      const prices = [
+        ...shoesData.map((s: any) => Number(s.price_usd)),
+        ...vestsData.map((s: any) => Number(s.price_usd)),
+      ].filter(Number.isFinite);
+      return prices.length > 0 ? (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2) : '—';
+    })(),
   };
 }
 
@@ -86,23 +78,15 @@ export default async function HomePage() {
   const d = await loadHome();
 
   const kindColor: Record<string, string> = {
-    add: 'var(--color-moss)',
-    update: 'var(--color-ochre)',
-    price: 'var(--color-ochre)',
-    review: 'var(--color-moss)',
-    remove: 'var(--color-rust)',
+    add: 'var(--color-moss)', update: 'var(--color-ochre)',
+    price: 'var(--color-ochre)', review: 'var(--color-moss)', remove: 'var(--color-rust)',
   };
   const kindLabel: Record<string, string> = {
-    add: '+ADD',
-    update: '~UPD',
-    price: '~PRC',
-    review: '+REV',
-    remove: '−RMV',
+    add: '+ADD', update: '~UPD', price: '~PRC', review: '+REV', remove: '−RMV',
   };
 
   return (
     <div className="bg-sand text-carbon">
-      {/* ── HERO ────────────────────────────────────────────── */}
       <section className="border-b border-rule px-4 pb-10 pt-10 sm:px-6 sm:pb-12 sm:pt-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-end gap-8 lg:grid-cols-[7fr_5fr] lg:gap-12">
           <div>
@@ -110,43 +94,28 @@ export default async function HomePage() {
               · RGD/INDEX · {d.totalCount} SKU · {monthYear()} ·
             </div>
             <h1 className="m-0 mt-5 font-display text-[48px] font-semibold leading-[0.92] tracking-[-0.045em] sm:text-[68px] lg:text-[96px]">
-              Running gear,
-              <br />
-              <span className="text-rust">by the numbers.</span>
+              Running gear,<br /><span className="text-rust">by the numbers.</span>
             </h1>
             <p className="mt-5 max-w-[600px] font-mono text-[15px] leading-[1.6] text-ink-70">
               [{d.totalCount}] SKU indexed across 9 disciplines. Every spec measured,
-              normalized, sortable, kept honest. Less listicle, more{' '}
-              <code className="rounded bg-paper px-1.5 py-0.5 text-carbon">SELECT * FROM gear</code>.
+              normalized, sortable, kept honest.
             </p>
             <div className="mt-7 flex flex-wrap gap-2.5">
-              <Link
-                href="/shoes"
-                className="rounded-[3px] bg-carbon px-[22px] py-3.5 font-mono text-[13px] font-medium text-sand"
-              >
+              <Link href="/shoes" className="rounded-[3px] bg-carbon px-[22px] py-3.5 font-mono text-[13px] font-medium text-sand">
                 browse the index →
               </Link>
-              <Link
-                href="/finder"
-                className="rounded-[3px] border border-carbon bg-paper px-[22px] py-3.5 font-mono text-[13px] font-medium text-carbon"
-              >
+              <Link href="/finder" className="rounded-[3px] border border-carbon bg-paper px-[22px] py-3.5 font-mono text-[13px] font-medium text-carbon">
                 find your shoe (5 questions) ⇄
               </Link>
-              <Link
-                href="/compare"
-                className="rounded-[3px] border border-carbon bg-paper px-[22px] py-3.5 font-mono text-[13px] font-medium text-carbon"
-              >
+              <Link href="/compare" className="rounded-[3px] border border-carbon bg-paper px-[22px] py-3.5 font-mono text-[13px] font-medium text-carbon">
                 run a comparison
               </Link>
             </div>
           </div>
 
-          {/* live stats panel */}
           <div className="rounded-[6px] border border-rule bg-paper p-5">
             <div className="mb-3.5 flex items-center justify-between">
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-50">
-                system · live
-              </span>
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-50">system · live</span>
               <span className="font-mono text-[10.5px] text-moss">● live</span>
             </div>
             {[
@@ -154,21 +123,11 @@ export default async function HomePage() {
               ['Reviews live', `${d.totalCount} / ${d.totalCount}`, '100% coverage'],
               ['Avg price', `$${d.avgPrice}`, 'shoes + vests'],
               ['Categories', '3', 'shoes · vests · fuel'],
-              ['Editorial standards', 'Published', 'all data sourced from manufacturers'],
             ].map(([l, v, d2], i, arr) => (
-              <div
-                key={l}
-                className={`grid grid-cols-[1fr_auto] gap-3 py-3 ${
-                  i < arr.length - 1 ? 'border-b border-rule' : ''
-                }`}
-              >
+              <div key={l} className={`grid grid-cols-[1fr_auto] gap-3 py-3${i < arr.length - 1 ? ' border-b border-rule' : ''}`}>
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
-                    {l}
-                  </div>
-                  <div className="mt-0.5 font-display text-[19px] font-medium tracking-[-0.02em]">
-                    {v}
-                  </div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">{l}</div>
+                  <div className="mt-0.5 font-display text-[19px] font-medium tracking-[-0.02em]">{v}</div>
                 </div>
                 <div className="self-end font-mono text-[11px] text-moss">{d2}</div>
               </div>
@@ -177,7 +136,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── THE INDEX (top-12) ──────────────────────────────────── */}
+      {/* TOP-12 TABLE */}
       <section className="border-b border-rule px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -189,32 +148,31 @@ export default async function HomePage() {
                 Browse like a database.
               </h2>
             </div>
-            <Link
-              href="/shoes"
-              className="rounded-[3px] border border-carbon px-3 py-1.5 font-mono text-[12px] text-carbon"
-            >
+            <Link href="/shoes" className="rounded-[3px] border border-carbon px-3 py-1.5 font-mono text-[12px] text-carbon">
               see all {d.shoeStats.count} shoes →
             </Link>
           </div>
 
           <div className="rounded-[6px] border border-rule bg-paper">
-            {/* Desktop header */}
-            <div className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_90px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
+            <div className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_100px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
               <span>#</span><span /><span>brand / model</span>
               <span className="text-right">drop</span>
               <span className="text-right">wt</span>
               <span className="text-right">stack</span>
               <span className="text-right">price</span>
-              <span className="text-right">score ↓</span>
+              <span className="text-center">score</span>
               <span className="text-right" />
             </div>
-            {d.top.map((s: any, i: number) => (
-              <div key={s.id} className={`border-b border-rule-soft last:border-0${i === 0 ? ' bg-rust/[0.05]' : ''}`}>
+            {d.top.map((s: any, i: number) => {
+              const isFirst = i === 0;
+              const bg = isFirst ? '#c4582c' : '#171615';
+              return (
+              <div key={s.id} className={`border-b border-rule-soft last:border-0${isFirst ? ' bg-rust/[0.05]' : ''}`}>
 
-                {/* Mobile row */}
+                {/* Mobile */}
                 <Link href={`/reviews/${s.slug}`} className="flex items-center gap-3 px-3 py-3 no-underline md:hidden">
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[3px] bg-sand-deep">
-                    {s.image_url && <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="(max-width: 768px) 56px, 44px" quality={100} />}
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[3px] bg-sand-deep">
+                    {s.image_url && <img src={s.image_url} alt={s.model} className="h-full w-full object-cover" loading="lazy" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-50">
@@ -226,21 +184,18 @@ export default async function HomePage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <div className="text-[20px] font-bold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: i === 0 ? '#c4582c' : '#111' }}>
-                      {s.our_rating}<span style={{ fontFamily: 'monospace', fontSize: '9px', color: '#7a7466' }}>/10</span>
-                    </div>
+                    <span className="inline-flex items-baseline gap-0.5 rounded px-2 py-0.5 font-bold leading-none text-sand" style={{ background: bg, fontSize: '20px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                      {s.our_rating}<span style={{ fontSize: '9px', color: '#aea795', fontFamily: 'monospace', fontWeight: 400 }}>/10</span>
+                    </span>
                     <span className="rounded-[3px] bg-carbon px-2.5 py-1 font-mono text-[10px] text-sand">BUY →</span>
                   </div>
                 </Link>
 
-                {/* Desktop row */}
-                <Link
-                  href={`/reviews/${s.slug}`}
-                  className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_90px_120px] items-center gap-3 px-4 py-3.5 no-underline"
-                >
+                {/* Desktop */}
+                <Link href={`/reviews/${s.slug}`} className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_100px_120px] items-center gap-3 px-4 py-3.5 no-underline">
                   <span className="font-mono text-[12px] text-ink-50">{String(i + 1).padStart(2, '0')}</span>
-                  <div className="relative h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
-                    {s.image_url && <Image src={s.image_url} alt={s.model} fill className="object-cover" sizes="44px" quality={100} />}
+                  <div className="h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
+                    {s.image_url && <img src={s.image_url} alt={s.model} className="h-full w-full object-cover" loading="lazy" />}
                   </div>
                   <div className="min-w-0">
                     <div className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-50">
@@ -252,8 +207,10 @@ export default async function HomePage() {
                   <span className="text-right font-mono text-[13px]">{s.weight_g}<span className="text-ink-50">g</span></span>
                   <span className="text-right font-mono text-[13px]">{s.stack_heel_mm}<span className="text-ink-50">mm</span></span>
                   <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
-                  <div className="text-right text-[22px] font-bold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: i === 0 ? '#c4582c' : '#111' }}>
-                    {s.our_rating}<span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#7a7466' }}>/10</span>
+                  <div className="flex justify-center">
+                    <span className="inline-flex items-baseline gap-0.5 rounded px-2.5 py-0.5 font-bold leading-none text-sand" style={{ background: bg, fontSize: '22px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                      {s.our_rating}<span style={{ fontSize: '10px', color: '#aea795', fontFamily: 'monospace', fontWeight: 400, marginLeft: '2px' }}>/10</span>
+                    </span>
                   </div>
                   <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
                     BUY · <PriceDisplay usd={s.price_usd} />
@@ -261,86 +218,41 @@ export default async function HomePage() {
                 </Link>
 
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ── CATEGORY CARDS ──────────────────────────────────────── */}
+      {/* CATEGORY CARDS */}
       <section className="border-b border-rule px-8 py-12">
         <div className="mx-auto max-w-7xl">
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
-            · categories · 3 ·
-          </span>
-          <h2 className="m-0 mt-2 mb-6 font-display text-[48px] font-semibold tracking-[-0.03em]">
-            Pick a sub-index.
-          </h2>
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">· categories · 3 ·</span>
+          <h2 className="m-0 mt-2 mb-6 font-display text-[48px] font-semibold tracking-[-0.03em]">Pick a sub-index.</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <CategoryCard
-              href="/shoes"
-              slug="/shoes"
-              title="Running shoes"
-              count={d.shoeStats.count}
-              stats={[
-                ['weight', range(d.shoeStats.weight, 'g')],
-                ['drop',   range(d.shoeStats.drop, 'mm')],
-                ['stack',  range(d.shoeStats.stack, 'mm')],
-                ['$',      range(d.shoeStats.price, '')],
-              ]}
-            />
-            <CategoryCard
-              href="/vests"
-              slug="/vests"
-              title="Vests & packs"
-              count={d.vestStats.count}
-              stats={[
-                ['capacity', range(d.vestStats.cap, 'L')],
-                ['weight',   range(d.vestStats.weight, 'g')],
-                ['UTMB',     'filterable'],
-                ['$',        range(d.vestStats.price, '')],
-              ]}
-            />
-            <CategoryCard
-              href="/gels"
-              slug="/fuel"
-              title="Gels & fuel"
-              count={d.gelStats.count}
-              stats={[
-                ['carbs',     range(d.gelStats.carbs, 'g')],
-                ['caffeine',  range(d.gelStats.caffeine, 'mg')],
-                ['real-food', 'tagged'],
-                ['$/serve',   range(d.gelStats.price, '')],
-              ]}
-            />
+            <CategoryCard href="/shoes" slug="/shoes" title="Running shoes" count={d.shoeStats.count}
+              stats={[['weight', range(d.shoeStats.weight, 'g')], ['drop', range(d.shoeStats.drop, 'mm')], ['stack', range(d.shoeStats.stack, 'mm')], ['$', range(d.shoeStats.price, '')]]} />
+            <CategoryCard href="/vests" slug="/vests" title="Vests & packs" count={d.vestStats.count}
+              stats={[['capacity', range(d.vestStats.cap, 'L')], ['weight', range(d.vestStats.weight, 'g')], ['UTMB', 'filterable'], ['$', range(d.vestStats.price, '')]]} />
+            <CategoryCard href="/gels" slug="/fuel" title="Gels & fuel" count={d.gelStats.count}
+              stats={[['carbs', range(d.gelStats.carbs, 'g')], ['caffeine', range(d.gelStats.caffeine, 'mg')], ['real-food', 'tagged'], ['$/serve', range(d.gelStats.price, '')]]} />
           </div>
         </div>
       </section>
 
-      {/* ── RECENT PRICE CHANGES + CHANGELOG ────────────────────── */}
+      {/* CHANGELOG + PRICE LOG */}
       <section className="border-b border-rule px-8 py-12">
         <div className="mx-auto max-w-7xl space-y-12">
-          {/* Price changes */}
           {d.priceLog.length > 0 && (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
               <div>
-                <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ochre">
-                  · recent price changes ·
-                </span>
-                <h2 className="m-0 mt-2 font-display text-[36px] font-semibold tracking-[-0.03em]">
-                  Prices moving.
-                </h2>
-                <Link href="/prices" className="mt-2 inline-block font-mono text-[11.5px] text-rust">
-                  view all prices →
-                </Link>
+                <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ochre">· recent price changes ·</span>
+                <h2 className="m-0 mt-2 font-display text-[36px] font-semibold tracking-[-0.03em]">Prices moving.</h2>
+                <Link href="/prices" className="mt-2 inline-block font-mono text-[11.5px] text-rust">view all prices →</Link>
               </div>
               <div className="rounded-[6px] border border-rule bg-paper p-4 font-mono text-[12.5px]">
                 {d.priceLog.map((e: any, i: number) => (
-                  <div
-                    key={e.id}
-                    className={`grid grid-cols-[140px_1fr] items-center gap-3 py-2 ${
-                      i < d.priceLog.length - 1 ? 'border-b border-rule-soft' : ''
-                    }`}
-                  >
+                  <div key={e.id} className={`grid grid-cols-[140px_1fr] items-center gap-3 py-2${i < d.priceLog.length - 1 ? ' border-b border-rule-soft' : ''}`}>
                     <span className="text-ink-50">{formatShort(e.occurred_at)}</span>
                     <span>{e.summary}</span>
                   </div>
@@ -349,43 +261,26 @@ export default async function HomePage() {
             </div>
           )}
 
-          {/* Changelog */}
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
             <div>
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
-                · /changelog ·
-              </span>
-              <h2 className="m-0 mt-2 mb-3 font-display text-[36px] font-semibold tracking-[-0.03em]">
-                Kept current.
-              </h2>
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">· /changelog ·</span>
+              <h2 className="m-0 mt-2 mb-3 font-display text-[36px] font-semibold tracking-[-0.03em]">Kept current.</h2>
               <p className="m-0 max-w-[460px] font-mono text-[13px] leading-[1.6] text-ink-70">
-                Every entry, edit, re-score and price-check is logged. Public, timestamped, and
-                reversible.
+                Every entry, edit, re-score and price-check is logged. Public, timestamped, and reversible.
               </p>
-              <Link href="/changelog" className="mt-4 inline-block font-mono text-[11.5px] text-rust">
-                open the full log →
-              </Link>
+              <Link href="/changelog" className="mt-4 inline-block font-mono text-[11.5px] text-rust">open the full log →</Link>
             </div>
             <div className="rounded-[6px] border border-rule bg-paper p-4 font-mono text-[12.5px] leading-[1.7]">
               {d.changelog.length > 0 ? (
                 d.changelog.map((e: any, i: number) => (
-                  <div
-                    key={e.id}
-                    className={`grid grid-cols-[140px_60px_1fr] items-center gap-3 py-1.5 ${
-                      i < d.changelog.length - 1 ? 'border-b border-rule-soft' : ''
-                    }`}
-                  >
+                  <div key={e.id} className={`grid grid-cols-[140px_60px_1fr] items-center gap-3 py-1.5${i < d.changelog.length - 1 ? ' border-b border-rule-soft' : ''}`}>
                     <span className="text-ink-50">{formatShort(e.occurred_at)}</span>
-                    <span style={{ color: kindColor[e.kind] }} className="font-semibold">
-                      {kindLabel[e.kind] ?? e.kind.toUpperCase()}
-                    </span>
+                    <span style={{ color: kindColor[e.kind] }} className="font-semibold">{kindLabel[e.kind] ?? e.kind.toUpperCase()}</span>
                     <span>{e.summary}</span>
                   </div>
                 ))
               ) : (
-                <span className="text-ink-50">
-                  · changelog is empty — run an /add or wait for the cron sync ·
-                </span>
+                <span className="text-ink-50">· changelog is empty — run an /add or wait for the cron sync ·</span>
               )}
             </div>
           </div>
@@ -395,15 +290,12 @@ export default async function HomePage() {
   );
 }
 
-// ─── helpers ─────────────────────────────────────────────────────
 function range([a, b]: number[], unit: string) {
   if (a === b) return `${a}${unit}`;
   return `${a}${unit}–${b}${unit}`;
 }
 function monthYear() {
-  return new Date()
-    .toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-    .toUpperCase();
+  return new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
 }
 function formatShort(iso: string) {
   const d = new Date(iso);
@@ -414,42 +306,22 @@ function formatShort(iso: string) {
   return `${hh}:${mm} · ${dd}/${mo}`;
 }
 
-function CategoryCard({
-  href,
-  slug,
-  title,
-  count,
-  stats,
-}: {
-  href: string;
-  slug: string;
-  title: string;
-  count: number;
+function CategoryCard({ href, slug, title, count, stats }: {
+  href: string; slug: string; title: string; count: number;
   stats: (readonly [string, string])[];
 }) {
   return (
-    <Link
-      href={href}
-      className="block overflow-hidden rounded-[6px] border border-rule bg-paper"
-    >
+    <Link href={href} className="block overflow-hidden rounded-[6px] border border-rule bg-paper">
       <div className="flex items-center justify-between border-b border-rule px-4 py-3">
-        <span className="bg-carbon px-2 py-0.5 font-mono text-[10px] tracking-[0.12em] text-sand">
-          {slug}
-        </span>
-        <span className="bg-sand px-2.5 py-0.5 font-mono text-[11px] font-medium text-carbon">
-          {count} SKU
-        </span>
+        <span className="bg-carbon px-2 py-0.5 font-mono text-[10px] tracking-[0.12em] text-sand">{slug}</span>
+        <span className="bg-sand px-2.5 py-0.5 font-mono text-[11px] font-medium text-carbon">{count} SKU</span>
       </div>
       <div className="p-5">
-        <h3 className="m-0 mb-3 font-display text-[26px] font-semibold tracking-[-0.025em]">
-          {title}
-        </h3>
+        <h3 className="m-0 mb-3 font-display text-[26px] font-semibold tracking-[-0.025em]">{title}</h3>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-rule pt-2.5">
           {stats.map(([k, v]) => (
             <div key={k} className="flex justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">
-                {k}
-              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50">{k}</span>
               <span className="font-mono text-[12px] text-carbon">{v}</span>
             </div>
           ))}
