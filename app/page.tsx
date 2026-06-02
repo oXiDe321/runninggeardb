@@ -226,8 +226,8 @@ export default async function HomePage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <div className="font-sans text-[20px] font-semibold leading-none tracking-[-0.02em]" style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
-                      {s.our_rating}<span className="font-mono text-[9px] text-ink-50">/10</span>
+                    <div className="text-[20px] font-bold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
+                      {s.our_rating}<span className="font-mono font-normal text-[9px] text-ink-50">/10</span>
                     </div>
                     <span className="rounded-[3px] bg-carbon px-2.5 py-1 font-mono text-[10px] text-sand">BUY →</span>
                   </div>
@@ -252,8 +252,8 @@ export default async function HomePage() {
                   <span className="text-right font-mono text-[13px]">{s.weight_g}<span className="text-ink-50">g</span></span>
                   <span className="text-right font-mono text-[13px]">{s.stack_heel_mm}<span className="text-ink-50">mm</span></span>
                   <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
-                  <div className="text-right font-sans text-[22px] font-semibold leading-none tracking-[-0.02em]" style={{ color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
-                    {s.our_rating}<span className="ml-1 font-mono text-[10px] text-ink-50">/10</span>
+                  <div className="text-right text-[22px] font-bold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', color: i === 0 ? 'var(--color-rust)' : 'var(--color-carbon)' }}>
+                    {s.our_rating}<span className="ml-1 font-mono font-normal text-[10px] text-ink-50">/10</span>
                   </div>
                   <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
                     BUY · <PriceDisplay usd={s.price_usd} />
