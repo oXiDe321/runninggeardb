@@ -165,7 +165,6 @@ export default async function HomePage() {
             </div>
             {d.top.map((s: any, i: number) => {
               const isFirst = i === 0;
-              const bg = isFirst ? '#c4582c' : '#171615';
               return (
               <div key={s.id} className={`border-b border-rule-soft last:border-0${isFirst ? ' bg-rust/[0.05]' : ''}`}>
 
@@ -184,9 +183,7 @@ export default async function HomePage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <span className="inline-flex items-baseline gap-0.5 rounded px-2 py-0.5 font-bold leading-none text-sand" style={{ background: bg, fontSize: '20px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                      {s.our_rating}<span style={{ fontSize: '9px', color: '#aea795', fontFamily: 'monospace', fontWeight: 400 }}>/10</span>
-                    </span>
+                    <ScoreCircle score={Number(s.our_rating)} size={40} />
                     <span className="rounded-[3px] bg-carbon px-2.5 py-1 font-mono text-[10px] text-sand">BUY →</span>
                   </div>
                 </Link>
@@ -208,9 +205,7 @@ export default async function HomePage() {
                   <span className="text-right font-mono text-[13px]">{s.stack_heel_mm}<span className="text-ink-50">mm</span></span>
                   <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
                   <div className="flex justify-center">
-                    <span className="inline-flex items-baseline gap-0.5 rounded px-2.5 py-0.5 font-bold leading-none text-sand" style={{ background: bg, fontSize: '22px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                      {s.our_rating}<span style={{ fontSize: '10px', color: '#aea795', fontFamily: 'monospace', fontWeight: 400, marginLeft: '2px' }}>/10</span>
-                    </span>
+                    <ScoreCircle score={Number(s.our_rating)} size={44} />
                   </div>
                   <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
                     BUY · <PriceDisplay usd={s.price_usd} />
@@ -297,6 +292,26 @@ function range([a, b]: number[], unit: string) {
 function monthYear() {
   return new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
 }
+function ScoreCircle({ score, size = 44 }: { score: number; size?: number }) {
+  const stroke = 3;
+  const r = size / 2 - stroke - 1;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (score / 10) * circ;
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-rule-soft)" strokeWidth={stroke} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-rust)" strokeWidth={stroke} fill="none"
+          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`} />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center font-bold tracking-[-0.02em]" style={{ fontSize: size <= 40 ? '11px' : '13px', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#171615' }}>
+        {score.toFixed(1)}
+      </div>
+    </div>
+  );
+}
+
 function formatShort(iso: string) {
   const d = new Date(iso);
   const hh = String(d.getHours()).padStart(2, '0');
