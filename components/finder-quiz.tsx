@@ -312,7 +312,7 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
                 <a
                   key={s.id}
                   href={`/reviews/${s.slug}`}
-                  className="grid grid-cols-[56px_1fr_44px] items-center gap-3 rounded-[3px] p-2.5"
+                  className="grid grid-cols-[56px_1fr] items-center gap-3 rounded-[3px] p-2.5"
                   style={i === 0 ? { background: 'rgba(196,88,44,0.06)' } : undefined}
                 >
                   <div className="relative h-14 w-14 overflow-hidden rounded-[3px] bg-sand-deep">
@@ -337,9 +337,6 @@ export default function FinderQuiz({ initialShoes }: { initialShoes: Shoe[] }) {
                     <div className="mt-0.5 font-mono text-[10.5px] text-ink-50">
                       {s.weight_g}g · {s.drop_mm}mm · ${s.price_usd}
                     </div>
-                  </div>
-                  <div className="grid h-11 w-11 place-items-center rounded-full border border-rust font-display text-[14px] font-semibold text-rust">
-                    {s.our_rating?.toFixed(1)}
                   </div>
                 </a>
               ))}

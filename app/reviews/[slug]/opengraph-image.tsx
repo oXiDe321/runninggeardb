@@ -21,7 +21,6 @@ export default async function OG({ params }: Props) {
 
   const brand = r?.brand ?? 'RGDB';
   const model = r?.model ?? 'Review';
-  const rating = r?.our_rating;
   const tagline = r?.tagline ?? '';
   const image = r?.image_url ?? null;
   const discipline = r?.discipline?.toUpperCase() ?? '';
@@ -126,35 +125,9 @@ export default async function OG({ params }: Props) {
             style={{
               display: 'flex',
               alignItems: 'flex-end',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-end',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div
-                style={{
-                  fontSize: 14,
-                  fontFamily: 'monospace',
-                  letterSpacing: 2,
-                  color: '#7a7466',
-                }}
-              >
-                RGDB SCORE
-              </div>
-              {rating != null && (
-                <div
-                  style={{
-                    fontSize: 156,
-                    fontWeight: 700,
-                    letterSpacing: -8,
-                    lineHeight: 0.85,
-                    color: '#171615',
-                  }}
-                >
-                  {rating.toFixed(1)}
-                  <span style={{ fontSize: 32, color: '#7a7466' }}>/10</span>
-                </div>
-              )}
-            </div>
             <div
               style={{
                 display: 'flex',

@@ -28,14 +28,12 @@ const specsForCategory: Record<Category, { label: string; key: string; format?: 
     { label: 'Weight', key: 'weight_g', format: (v) => `${v}g` },
     { label: 'Carbon Plate', key: 'carbon_plate', format: (v) => v ? 'Yes' : 'No' },
     { label: 'Price', key: 'price_usd', format: (v) => `$${v}` },
-    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/10` },
   ],
   vests: [
     { label: 'Capacity', key: 'capacity_l', format: (v) => `${v}L` },
     { label: 'Weight', key: 'weight_g', format: (v) => `${v}g` },
     { label: 'UTMB Compliant', key: 'utmb_compliant', format: (v) => v ? 'Yes' : 'No' },
     { label: 'Price', key: 'price_usd', format: (v) => `$${v}` },
-    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/10` },
   ],
   gels: [
     { label: 'Format', key: 'format' },
@@ -45,7 +43,6 @@ const specsForCategory: Record<Category, { label: string; key: string; format?: 
     { label: 'Calories', key: 'calories', format: (v) => v ? `${v}` : '—' },
     { label: 'Real Food', key: 'real_food', format: (v) => v ? 'Yes' : 'No' },
     { label: 'Price/serving', key: 'price_per_serving', format: (v) => `$${v}` },
-    { label: 'Rating', key: 'our_rating', format: (v) => `${v}/10` },
   ],
 };
 

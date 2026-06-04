@@ -49,8 +49,8 @@ export default function ProductTable({
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [view, setView] = useState<'table' | 'grid'>('table');
   const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' }>({
-    key: 'our_rating',
-    dir: 'desc',
+    key: category === 'gels' ? 'carbs_per_serving_g' : 'weight_g',
+    dir: 'asc',
   });
 
   const filtered = useMemo(() => {
@@ -76,7 +76,6 @@ export default function ProductTable({
 
   const cols = SPEC_COLUMNS[category];
   const sortKeys = [
-    { key: 'our_rating', label: 'rating' },
     { key: 'price_usd', label: 'price' },
     ...(category === 'shoes'
       ? [{ key: 'weight_g', label: 'weight' }, { key: 'drop_mm', label: 'drop' }]
@@ -208,7 +207,7 @@ function UnifiedTable({
 }) {
   const { fmt, symbol } = useCurrency();
   const colWidths = cols.map((c) => c.width).join(' ');
-  const desktopGridCols = `40px 56px 2fr ${colWidths} 90px 120px`;
+  const desktopGridCols = `40px 56px 2fr ${colWidths} 120px`;
 
   const displayCols = cols.map((c) =>
     c.key === 'price_usd' || c.key === 'price_per_serving'
@@ -257,9 +256,6 @@ function UnifiedTable({
             {c.label}
           </TH>
         ))}
-        <TH k="our_rating" align="right" sort={sort} setSort={setSort}>
-          score
-        </TH>
         <span className="text-right">buy</span>
       </div>
 
@@ -269,7 +265,6 @@ function UnifiedTable({
           brand / {category === 'gels' ? 'product' : 'model'}
         </TH>
         <div className="flex items-center gap-3">
-          <TH k="our_rating" align="right" sort={sort} setSort={setSort}>score</TH>
           <TH k={category === 'gels' ? 'price_per_serving' : 'price_usd'} align="right" sort={sort} setSort={setSort}>
             {symbol}
           </TH>
@@ -313,9 +308,8 @@ function UnifiedTable({
                 </div>
                 <div className="mt-0.5 font-mono text-[10px] text-ink-50">{specPills(p)}</div>
               </div>
-              {/* Score + Buy */}
+              {/* Buy */}
               <div className="flex shrink-0 flex-col items-end gap-2">
-                <ScoreCircle score={Number(p.our_rating ?? 0)} />
                 <span
                   className="rounded-[3px] bg-carbon px-3 py-1.5 font-mono text-[10px] font-medium text-sand whitespace-nowrap"
                   onClick={(e) => { e.preventDefault(); window.open(buyHref, '_blank', 'noopener'); }}
@@ -365,9 +359,6 @@ function UnifiedTable({
                   )}
                 </span>
               ))}
-              <div className="flex justify-end">
-                <ScoreCircle score={Number(p.our_rating ?? 0)} />
-              </div>
               <span
                 className="rounded-[3px] bg-carbon py-2 text-center font-mono text-[11px] font-medium text-sand"
                 onClick={(e) => { e.preventDefault(); window.open(buyHref, '_blank', 'noopener'); }}
@@ -437,38 +428,6 @@ function TH({
   );
 }
 
-// ── score ring ────────────────────────────────────────────────────
-
-function ScoreCircle({ score }: { score: number }) {
-  const size = 44;
-  const stroke = 3;
-  const r = size / 2 - stroke - 1;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (score / 10) * circ;
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-rule-soft)" strokeWidth={stroke} fill="none" />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke="var(--color-rust)"
-          strokeWidth={stroke}
-          fill="none"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-      <div className="absolute inset-0 grid place-items-center font-display text-[13px] font-semibold tracking-[-0.02em]">
-        {score.toFixed(1)}
-      </div>
-    </div>
-  );
-}
-
 // ── grid-mode card ────────────────────────────────────────────────
 
 function ProductCard({ product, category }: { product: Product; category: Category }) {
@@ -519,7 +478,6 @@ function ProductCard({ product, category }: { product: Product; category: Catego
         </div>
         <div className="mt-3 flex items-center justify-between border-t border-rule pt-3">
           <div className="font-mono text-[11.5px] text-rust">{category === 'shoes' ? 'read review →' : 'view specs →'}</div>
-          {product.our_rating && <ScoreCircle score={Number(product.our_rating)} />}
         </div>
       </div>
     </Link>

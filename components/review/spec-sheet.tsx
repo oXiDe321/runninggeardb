@@ -2,8 +2,6 @@
 // Full-width data sheet grouped by spec category.
 // Server-compatible — no client hooks.
 
-import type { DimensionScore } from '@/lib/review-types';
-
 interface Props {
   drop_mm: number | null;
   weight_g: number | null;
@@ -12,15 +10,12 @@ interface Props {
   stack_forefoot_mm: number | null;
   carbon_plate: boolean;
   rock_plate: boolean;
-  msrp_usd: number | null;
-  best_price: number | null;
   discipline: string | null;
   released_at: string | null;
   tester: string | null;
   miles_tested: number | null;
   weeks_tested: number | null;
   test_terrain: string | null;
-  dimensions: DimensionScore[];
 }
 
 function Spec({ label, value }: { label: string; value: string }) {
@@ -35,8 +30,8 @@ function Spec({ label, value }: { label: string; value: string }) {
 export default function SpecSheet(props: Props) {
   const {
     drop_mm, weight_g, in_house_weight_g, stack_heel_mm, stack_forefoot_mm,
-    carbon_plate, rock_plate, msrp_usd, best_price, discipline, released_at,
-    tester, miles_tested, weeks_tested, test_terrain, dimensions,
+    carbon_plate, rock_plate, discipline, released_at,
+    tester, miles_tested, weeks_tested, test_terrain,
   } = props;
 
   const weightStr = in_house_weight_g
@@ -47,10 +42,6 @@ export default function SpecSheet(props: Props) {
 
   const stackStr = stack_heel_mm != null
     ? `${stack_heel_mm}${stack_forefoot_mm != null ? `/${stack_forefoot_mm}` : ''}mm`
-    : null;
-
-  const discountPct = best_price && msrp_usd && msrp_usd > 0
-    ? Math.round(((msrp_usd - best_price) / msrp_usd) * 100)
     : null;
 
   const specs: { group: string; items: [string, string | null][] }[] = [
@@ -69,14 +60,6 @@ export default function SpecSheet(props: Props) {
         ['rock plate', rock_plate ? 'yes' : 'no'],
         ['discipline', discipline],
         ['released', released_at ? new Date(released_at).getFullYear().toString() : null],
-      ],
-    },
-    {
-      group: 'pricing',
-      items: [
-        ['MSRP', msrp_usd ? `$${msrp_usd}` : null],
-        ['current best', best_price ? `$${best_price}` : null],
-        ['saving', discountPct != null ? `${discountPct}% off` : null],
       ],
     },
     {
@@ -113,18 +96,6 @@ export default function SpecSheet(props: Props) {
               </div>
             );
           })}
-          {dimensions.length > 0 && (
-            <div className="min-w-0">
-              <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-50 mb-1.5">
-                scores
-              </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                {dimensions.map((d) => (
-                  <Spec key={d.key} label={d.label} value={d.value.toFixed(1)} />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </section>

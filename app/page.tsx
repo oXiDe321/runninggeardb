@@ -14,9 +14,9 @@ async function loadHome() {
     supabase.from('gels').select('id, carbs_per_serving_g, caffeine_mg, price_per_serving', { count: 'exact' }).eq('published', true),
     supabase
       .from('shoes')
-      .select('id, slug, brand, model, image_url, our_rating, weight_g, drop_mm, stack_heel_mm, price_usd, discipline, carbon_plate, tagline')
+      .select('id, slug, brand, model, image_url, weight_g, drop_mm, stack_heel_mm, price_usd, discipline, carbon_plate, tagline')
       .eq('published', true)
-      .order('our_rating', { ascending: false })
+      .order('weight_g', { ascending: true })
       .limit(12),
     supabase
       .from('changelog')
@@ -142,7 +142,7 @@ export default async function HomePage() {
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">
-                · the index · top-12 · sorted_by · rating ↓
+                · the index · top-12 · sorted_by · weight ↑
               </span>
               <h2 className="m-0 mt-2 font-display text-[48px] font-semibold tracking-[-0.03em]">
                 Browse like a database.
@@ -154,13 +154,12 @@ export default async function HomePage() {
           </div>
 
           <div className="rounded-[6px] border border-rule bg-paper">
-            <div className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_100px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
+            <div className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_120px] border-b border-rule bg-sand-deep px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50">
               <span>#</span><span /><span>brand / model</span>
               <span className="text-right">drop</span>
               <span className="text-right">wt</span>
               <span className="text-right">stack</span>
               <span className="text-right">price</span>
-              <span className="text-center">score</span>
               <span className="text-right" />
             </div>
             {d.top.map((s: any, i: number) => {
@@ -183,13 +182,12 @@ export default async function HomePage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <ScoreCircle score={Number(s.our_rating)} size={40} />
                     <span className="rounded-[3px] bg-carbon px-2.5 py-1 font-mono text-[10px] text-sand">BUY →</span>
                   </div>
                 </Link>
 
                 {/* Desktop */}
-                <Link href={`/reviews/${s.slug}`} className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_100px_120px] items-center gap-3 px-4 py-3.5 no-underline">
+                <Link href={`/reviews/${s.slug}`} className="hidden md:grid grid-cols-[40px_56px_1.6fr_60px_70px_70px_90px_120px] items-center gap-3 px-4 py-3.5 no-underline">
                   <span className="font-mono text-[12px] text-ink-50">{String(i + 1).padStart(2, '0')}</span>
                   <div className="h-11 w-11 overflow-hidden rounded-[3px] bg-sand-deep">
                     {s.image_url && <img src={s.image_url} alt={s.model} className="h-full w-full object-cover" loading="lazy" />}
@@ -204,9 +202,6 @@ export default async function HomePage() {
                   <span className="text-right font-mono text-[13px]">{s.weight_g}<span className="text-ink-50">g</span></span>
                   <span className="text-right font-mono text-[13px]">{s.stack_heel_mm}<span className="text-ink-50">mm</span></span>
                   <PriceDisplay usd={s.price_usd} className="text-right font-mono text-[13px]" />
-                  <div className="flex justify-center">
-                    <ScoreCircle score={Number(s.our_rating)} size={44} />
-                  </div>
                   <span className="rounded-[3px] bg-carbon py-1.5 text-center font-mono text-[11px] text-sand">
                     BUY · <PriceDisplay usd={s.price_usd} />
                   </span>
@@ -292,26 +287,6 @@ function range([a, b]: number[], unit: string) {
 function monthYear() {
   return new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
 }
-function ScoreCircle({ score, size = 44 }: { score: number; size?: number }) {
-  const stroke = 3;
-  const r = size / 2 - stroke - 1;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (score / 10) * circ;
-  return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-rule-soft)" strokeWidth={stroke} fill="none" />
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-rust)" strokeWidth={stroke} fill="none"
-          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`} />
-      </svg>
-      <div className="absolute inset-0 grid place-items-center font-bold tracking-[-0.02em]" style={{ fontSize: size <= 40 ? '11px' : '13px', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#171615' }}>
-        {score.toFixed(1)}
-      </div>
-    </div>
-  );
-}
-
 function formatShort(iso: string) {
   const d = new Date(iso);
   const hh = String(d.getHours()).padStart(2, '0');

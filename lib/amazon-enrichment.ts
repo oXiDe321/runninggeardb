@@ -74,4 +74,12 @@ export const AMAZON_ENRICHMENT: Record<string, { asin: string; image_id: string 
   'altra-lone-peak-8': { asin: 'B0CPN2RLN3', image_id: '511H6LMtMhL' },
   'altra-olympus-6': { asin: 'B0CPRB16ML', image_id: '61b5My51xQL' },
   'on-cloudultra-2': { asin: 'B0CN8ZVDG1', image_id: '61UdsdMl56L' },
+  'asics-gel-kayano-31': { asin: 'B0CN8333HR', image_id: '31DOzFF0n6L' },
+  'nike-vaporfly-3': { asin: 'B0DJGB4BJR', image_id: '714NpSlEF-L' },
+  'adidas-adizero-adios-9': { asin: 'B093286DQS', image_id: '61UXM2AnbzL' },
+  'asics-novablast-5': { asin: 'B0D3JD1BZQ', image_id: '61XF87S1OEL' },
+  'saucony-kinvara-15': { asin: 'B0D31W2WBB', image_id: '71MVmbQgV1L' },
+  'puma-velocity-nitro-3': { asin: 'B0D5HMHK5W', image_id: '717dErhck6L' },
+  'reebok-nano-x5': { asin: 'B0D68RJWMV', image_id: '81hRwh8B4vL' },
+  'nike-metcon-9': { asin: 'B0C863X4PK', image_id: '71U1TbjzJoL' },
 };

@@ -188,13 +188,8 @@ export default function SearchPalette({
                   </div>
                 </div>
 
-                {/* Score + price */}
+                {/* Price */}
                 <div className="flex shrink-0 items-center gap-3 text-right">
-                  {r.our_rating && (
-                    <span className={`font-mono text-[13px] font-semibold ${i === cursor ? 'text-sand' : 'text-rust'}`}>
-                      {r.our_rating}
-                    </span>
-                  )}
                   {r.price_usd && (
                     <span className={`font-mono text-[11px] ${i === cursor ? 'text-sand' : 'text-ink-70'}`}>
                       ${r.price_usd}

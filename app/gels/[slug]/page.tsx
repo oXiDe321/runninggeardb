@@ -7,13 +7,11 @@ import type { Metadata } from 'next';
 
 import { getGelReview, getAllGelSlugs } from '@/lib/review-data';
 import { getCategoryStats } from '@/lib/stats-data';
-import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
+import { affiliateUrl, amazonSearchUrl, amazonAsinUrl } from '@/lib/amazon';
+import { AMAZON_ENRICHMENT } from '@/lib/amazon-enrichment';
 
 import DisclosureStrip from '@/components/review/disclosure-strip';
-import ScorePanel from '@/components/review/score-panel';
 import BestForMatrix from '@/components/review/best-for-matrix';
-import RetailerList from '@/components/review/retailer-list';
-import PriceHistory from '@/components/review/price-history';
 import CommunityQuotes from '@/components/review/community-quotes';
 import AiTransparency from '@/components/review/ai-transparency';
 import StickyBuyBar from '@/components/review/sticky-buy-bar';
@@ -31,8 +29,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const review = await getGelReview(slug);
   if (!review) return { title: 'Gel not found · RunningGearDB' };
 
-  const title = `${review.brand} ${review.product} Review — ${review.our_rating ?? '—'}/10 · RunningGearDB`;
-  const description = review.tagline ?? `${review.brand} ${review.product}: nutrition facts, community consensus, live prices.`;
+  const title = `${review.brand} ${review.product} Review · RunningGearDB`;
+  const description = review.tagline ?? `${review.brand} ${review.product}: nutrition facts, community consensus.`;
   const url = `${SITE_URL}/gels/${review.slug}`;
 
   return {
@@ -78,44 +76,25 @@ export default async function GelReviewPage({ params }: PageProps) {
   ]);
   if (!r) return notFound();
 
-  const bestPrice = r.retailer_prices[0];
+  const enrichment = AMAZON_ENRICHMENT[r.slug];
   const rawAmazonUrl = r.amazon_url && r.amazon_url !== 'https://amazon.com' ? r.amazon_url : null;
   const buyUrl =
-    bestPrice?.url
-      ? affiliateUrl(bestPrice.url)
+    r.retailer_prices[0]?.url
+      ? affiliateUrl(r.retailer_prices[0].url)
       : r.affiliate_url
         ? affiliateUrl(r.affiliate_url)
         : rawAmazonUrl
           ? affiliateUrl(rawAmazonUrl)
-          : amazonSearchUrl(r.brand, r.product);
-  const buyPrice = bestPrice?.price_usd ?? r.price_per_serving ?? null;
-  const lastChecked = bestPrice?.checked_at ?? null;
-  const retailer = bestPrice?.retailer ?? 'amazon';
+          : enrichment
+            ? amazonAsinUrl(enrichment.asin)
+            : amazonSearchUrl(r.brand, r.product);
 
   const wordCount = r.review_content ? r.review_content.split(/\s+/).length : 0;
   const readMin = r.review_content ? readingTime(r.review_content) : 0;
 
   return (
     <div className="bg-sand font-sans text-carbon">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Product',
-            name: `${r.brand} ${r.product}`,
-            brand: { '@type': 'Brand', name: r.brand },
-            image: r.image_url ?? undefined,
-            offers: r.retailer_prices.map((p) => ({
-              '@type': 'Offer', price: p.price_usd, priceCurrency: 'AUD',
-              availability: p.in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-              url: p.url,
-            })),
-            ...(r.our_rating != null ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: r.our_rating, bestRating: 10, worstRating: 0, ratingCount: 1 } } : {}),
-          }),
-        }}
-      />
-      <DisclosureStrip lastCheckedAt={lastChecked} />
+      <DisclosureStrip />
 
       {/* ── Header strip ───────────────────────────────────────── */}
       <header className="border-b border-rule px-4 pb-6 pt-6 sm:px-6 sm:pb-[22px] sm:pt-7 lg:px-8">
@@ -123,7 +102,7 @@ export default async function GelReviewPage({ params }: PageProps) {
           <div className="font-mono text-[11.5px] uppercase tracking-[0.16em] text-ink-50">
             rgd ▸ index ▸ gels ▸ <span className="text-rust">{r.slug}</span>
           </div>
-          <div className="mt-3.5 grid grid-cols-1 gap-6 md:grid-cols-[1.4fr_1fr] md:gap-12">
+          <div className="mt-3.5">
             <div>
               <div className="mb-1.5 font-mono text-[11.5px] tracking-[0.14em] text-ink-50">
                 <span className="text-rust">● REVIEW</span> · SKU {r.id.slice(0, 4).toUpperCase()}
@@ -143,9 +122,6 @@ export default async function GelReviewPage({ params }: PageProps) {
                 </p>
               )}
             </div>
-            {r.our_rating != null && (
-              <ScorePanel overall={r.our_rating} dimensions={[]} />
-            )}
           </div>
         </div>
       </header>
@@ -165,10 +141,6 @@ export default async function GelReviewPage({ params }: PageProps) {
               ['format', r.format],
               ['real food', r.real_food ? 'yes' : 'no'],
               ['FODMAP', r.fodmap_friendly ? 'friendly' : '—'],
-            ]} />
-            <SpecGroup label="pricing" items={[
-              ['per serving', r.price_per_serving != null ? `A$${r.price_per_serving}` : null],
-              ['current best', buyPrice ? `A$${buyPrice}` : null],
             ]} />
             <SpecGroup label="testing" items={[
               ['servings tested', r.servings_tested != null ? String(r.servings_tested) : null],
@@ -213,18 +185,16 @@ export default async function GelReviewPage({ params }: PageProps) {
             <section className="mt-9">
               <h2 className="mb-3.5 font-display text-[30px] font-semibold tracking-[-0.03em]">· Versus the field</h2>
               <div className="overflow-x-auto rounded border border-rule">
-                <div className="grid grid-cols-[1.4fr_70px_70px_70px_60px] bg-sand-deep px-3.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50" style={{ minWidth: '370px' }}>
-                  <span>product</span><span className="text-right">carbs</span><span className="text-right">Na</span><span className="text-right">$</span><span className="text-right">score</span>
+                <div className="grid grid-cols-[1.4fr_70px_70px] bg-sand-deep px-3.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50" style={{ minWidth: '300px' }}>
+                  <span>product</span><span className="text-right">carbs</span><span className="text-right">Na</span>
                 </div>
-                {[{ id: r.id, brand: r.brand, name: r.product, image_url: r.image_url, carbs_per_serving_g: r.carbs_per_serving_g, price_per_serving: r.price_per_serving, our_rating: r.our_rating, self: true },
+                {[{ id: r.id, brand: r.brand, name: r.product, image_url: r.image_url, carbs_per_serving_g: r.carbs_per_serving_g, sodium_mg: r.sodium_mg, self: true },
                   ...r.related.map((x) => ({ ...x, name: x.product, self: false }))].map((c: any, i, arr) => (
-                  <div key={c.id} style={{ minWidth: '370px' }}
-                    className={`grid grid-cols-[1.4fr_70px_70px_70px_60px] items-center px-3.5 py-2.5 font-mono text-[12.5px] ${i < arr.length - 1 ? 'border-b border-rule-soft' : ''} ${c.self ? 'bg-rust/[0.06]' : ''}`}>
+                  <div key={c.id} style={{ minWidth: '300px' }}
+                    className={`grid grid-cols-[1.4fr_70px_70px] items-center px-3.5 py-2.5 font-mono text-[12.5px] ${i < arr.length - 1 ? 'border-b border-rule-soft' : ''} ${c.self ? 'bg-rust/[0.06]' : ''}`}>
                     <span><span className="text-ink-50">{c.brand}</span> {c.name}{c.self && <span className="ml-1.5 text-rust">★ this</span>}</span>
                     <span className="text-right">{c.carbs_per_serving_g}g</span>
-                    <span className="text-right">{(c as any).sodium_mg}mg</span>
-                    <span className="text-right">${c.price_per_serving}</span>
-                    <span className={`text-right ${c.self ? 'font-semibold text-rust' : ''}`}>{c.our_rating}</span>
+                    <span className="text-right">{c.sodium_mg}mg</span>
                   </div>
                 ))}
               </div>
@@ -238,17 +208,15 @@ export default async function GelReviewPage({ params }: PageProps) {
 
         {/* RIGHT RAIL */}
         <aside className="px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-          {r.retailer_prices.length > 0 ? (
-            <RetailerList prices={r.retailer_prices} msrp={r.price_per_serving} />
-          ) : (
-            buyPrice && (
-              <RetailerList msrp={r.price_per_serving} prices={[{
-                retailer: 'amazon', price_usd: buyPrice, url: buyUrl,
-                in_stock: true, stock_label: 'in stock', checked_at: new Date().toISOString(),
-              }]} />
-            )
-          )}
-          <PriceHistory points={r.price_history} currentPrice={buyPrice} />
+          {/* Buy CTA */}
+          <a
+            href={buyUrl}
+            rel="sponsored nofollow noopener"
+            target="_blank"
+            className="block w-full rounded bg-carbon px-[22px] py-5 text-center font-mono text-[14px] font-semibold tracking-[0.04em] text-sand"
+          >
+            View on Amazon →
+          </a>
 
           {/* vs category avg */}
           <div className="mt-3.5 rounded border border-rule bg-paper p-[18px]">
@@ -256,11 +224,9 @@ export default async function GelReviewPage({ params }: PageProps) {
             <div className="mt-2.5 font-mono text-[12px]">
               {[
                 { label: 'carbs', val: r.carbs_per_serving_g, avg: stats.avg_weight_g, unit: 'g' },
-                { label: 'price', val: r.price_per_serving, avg: stats.avg_price_usd, unit: 'A$' },
-                { label: 'rating', val: r.our_rating, avg: stats.avg_rating, unit: '/10' },
               ].filter(({ val, avg }) => val != null && avg != null).map(({ label, val, avg, unit }) => {
                 const d = delta(val, avg);
-                const better = label !== 'price' ? (val! > avg!) : (val! < avg!);
+                const better = (val! > avg!);
                 return (
                   <div key={label} className="flex justify-between border-b border-rule-soft py-1.5">
                     <span className="text-ink-50">{label}</span>
@@ -283,7 +249,7 @@ export default async function GelReviewPage({ params }: PageProps) {
               <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-rust">see also</span>
               <ul className="mt-2.5 grid gap-2.5">
                 {r.related.map((c) => (
-                  <li key={c.id} className="grid grid-cols-[44px_1fr_50px] items-center gap-3">
+                  <li key={c.id} className="grid grid-cols-[44px_1fr] items-center gap-3">
                     <a href={`/gels/${c.slug}`} className="relative block h-11 w-11 overflow-hidden rounded-[3px]">
                       {c.image_url && <Image src={c.image_url} alt={c.product} fill className="object-cover" sizes="44px" />}
                     </a>
@@ -291,7 +257,6 @@ export default async function GelReviewPage({ params }: PageProps) {
                       <div className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-50">{c.brand.toUpperCase()}</div>
                       <div className="font-display text-[15px] font-medium tracking-[-0.015em] text-carbon">{c.product}</div>
                     </a>
-                    <span className="text-right font-mono text-[12px] text-carbon">{c.our_rating}</span>
                   </li>
                 ))}
               </ul>
@@ -300,7 +265,7 @@ export default async function GelReviewPage({ params }: PageProps) {
         </aside>
       </div>
 
-      <StickyBuyBar brand={r.brand} model={r.product} discipline={''} rating={r.our_rating} price={buyPrice} retailer={retailer} buyUrl={buyUrl} image={r.image_url} />
+      <StickyBuyBar brand={r.brand} model={r.product} discipline="" buyUrl={buyUrl} image={r.image_url} />
     </div>
   );
 }

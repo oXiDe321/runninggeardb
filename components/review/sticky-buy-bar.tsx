@@ -11,9 +11,6 @@ interface Props {
   brand: string;
   model: string;
   discipline: string;
-  rating: number | null;
-  price: number | null;
-  retailer: string;
   buyUrl: string;
   image: string | null;
 }
@@ -22,9 +19,6 @@ export default function StickyBuyBar({
   brand,
   model,
   discipline,
-  rating,
-  price,
-  retailer,
   buyUrl,
   image,
 }: Props) {
@@ -55,20 +49,8 @@ export default function StickyBuyBar({
           </div>
           <div className="truncate font-display text-[15px] font-medium tracking-[-0.02em] sm:text-[19px]">
             {model}
-            {rating != null && (
-              <span className="hidden sm:inline">
-                {' · '}
-                <span className="text-rust">{rating.toFixed(1)}/10</span>
-              </span>
-            )}
           </div>
         </div>
-        <span className="hidden font-mono text-[11.5px] text-ink-30 md:inline">{retailer} · live</span>
-        {price != null && (
-          <span className="font-display text-[22px] font-semibold tracking-[-0.03em] sm:text-[30px]">
-            ${price}
-          </span>
-        )}
         <a
           href={affiliateUrl(buyUrl)}
           rel="sponsored nofollow noopener"

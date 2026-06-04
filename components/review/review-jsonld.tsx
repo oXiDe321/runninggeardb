@@ -33,17 +33,6 @@ export default function ReviewJsonLd({
         url: siteUrl,
       };
 
-  const offers = payload.retailer_prices.map((p) => ({
-    '@type': 'Offer',
-    price: p.price_usd,
-    priceCurrency: 'AUD',
-    availability: p.in_stock
-      ? 'https://schema.org/InStock'
-      : 'https://schema.org/OutOfStock',
-    url: p.url,
-    seller: { '@type': 'Organization', name: p.retailer },
-  }));
-
   const graph: Record<string, unknown>[] = [
     {
       '@type': 'BreadcrumbList',
@@ -60,32 +49,12 @@ export default function ReviewJsonLd({
       brand: { '@type': 'Brand', name: payload.brand },
       image: payload.image_url ?? undefined,
       sku: payload.id,
-      offers,
-      ...(payload.our_rating != null
-        ? {
-            aggregateRating: {
-              '@type': 'AggregateRating',
-              ratingValue: payload.our_rating,
-              bestRating: 10,
-              worstRating: 0,
-              ratingCount: payload.peer_reviewer_count > 0 ? payload.peer_reviewer_count + 1 : 1,
-            },
-          }
-        : {}),
     },
     {
       '@type': 'Review',
       '@id': `${reviewUrl}#review`,
       itemReviewed: { '@id': `${productUrl}#product` },
       url: reviewUrl,
-      reviewRating: payload.our_rating != null
-        ? {
-            '@type': 'Rating',
-            ratingValue: payload.our_rating,
-            bestRating: 10,
-            worstRating: 0,
-          }
-        : undefined,
       author,
       ...(payload.human_edited_at && { dateModified: payload.human_edited_at }),
       ...(payload.ai_drafted_at && { datePublished: payload.ai_drafted_at }),

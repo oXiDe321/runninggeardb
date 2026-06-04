@@ -8,14 +8,12 @@ import type { Metadata } from 'next';
 
 import { getShoeReview, getAllShoeSlugs } from '@/lib/review-data';
 import { getCategoryStats } from '@/lib/stats-data';
-import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
+import { affiliateUrl, amazonSearchUrl, amazonAsinUrl } from '@/lib/amazon';
+import { AMAZON_ENRICHMENT } from '@/lib/amazon-enrichment';
 
 import DisclosureStrip from '@/components/review/disclosure-strip';
-import ScorePanel from '@/components/review/score-panel';
 import TesterByline from '@/components/review/tester-byline';
 import BestForMatrix from '@/components/review/best-for-matrix';
-import RetailerList from '@/components/review/retailer-list';
-import PriceHistory from '@/components/review/price-history';
 import CommunityQuotes from '@/components/review/community-quotes';
 import AiTransparency from '@/components/review/ai-transparency';
 import StickyBuyBar from '@/components/review/sticky-buy-bar';
@@ -35,10 +33,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const review = await getShoeReview(slug);
   if (!review) return { title: 'Review not found · RunningGearDB' };
 
-  const title = `${review.brand} ${review.model} Review — ${review.our_rating ?? '—'}/10 · RunningGearDB`;
+  const title = `${review.brand} ${review.model} Review · RunningGearDB`;
   const description =
     review.tagline ??
-    `${review.brand} ${review.model}: in-depth review, full specs, live retailer prices.${review.miles_tested ? ` Tested over ${review.miles_tested} miles.` : ''}`;
+    `${review.brand} ${review.model}: in-depth review, full specs.${review.miles_tested ? ` Tested over ${review.miles_tested} miles.` : ''}`;
   const url = `${SITE_URL}/reviews/${review.slug}`;
 
   return {
@@ -94,19 +92,18 @@ export default async function ReviewPage({ params }: PageProps) {
   ]);
   if (!r) return notFound();
 
-  const bestPrice = r.retailer_prices[0];
+  const enrichment = AMAZON_ENRICHMENT[r.slug];
   const rawAmazonUrl = r.amazon_url && r.amazon_url !== 'https://amazon.com' ? r.amazon_url : null;
   const buyUrl =
-    bestPrice?.url
-      ? affiliateUrl(bestPrice.url)
+    r.retailer_prices[0]?.url
+      ? affiliateUrl(r.retailer_prices[0].url)
       : r.affiliate_url
         ? affiliateUrl(r.affiliate_url)
         : rawAmazonUrl
           ? affiliateUrl(rawAmazonUrl)
-          : amazonSearchUrl(r.brand, r.model);
-  const buyPrice = bestPrice?.price_usd ?? r.price_usd ?? null;
-  const lastChecked = bestPrice?.checked_at ?? null;
-  const retailer = bestPrice?.retailer ?? 'amazon';
+          : enrichment
+            ? amazonAsinUrl(enrichment.asin)
+            : amazonSearchUrl(r.brand, r.model);
 
   const wordCount = r.review_content ? r.review_content.split(/\s+/).length : 0;
   const readMin = r.review_content ? readingTime(r.review_content) : 0;
@@ -114,7 +111,7 @@ export default async function ReviewPage({ params }: PageProps) {
   return (
     <div className="bg-sand font-sans text-carbon">
       <ReviewJsonLd payload={r} siteUrl={SITE_URL} />
-      <DisclosureStrip lastCheckedAt={lastChecked} />
+      <DisclosureStrip />
 
       {/* ── Header strip ───────────────────────────────────────── */}
       <header className="border-b border-rule px-4 pb-6 pt-6 sm:px-6 sm:pb-[22px] sm:pt-7 lg:px-8">
@@ -122,7 +119,7 @@ export default async function ReviewPage({ params }: PageProps) {
           <div className="font-mono text-[11.5px] uppercase tracking-[0.16em] text-ink-50">
             rgd ▸ index ▸ shoes ▸ {r.discipline} ▸ <span className="text-rust">{r.slug}</span>
           </div>
-          <div className="mt-3.5 grid grid-cols-1 gap-6 md:grid-cols-[1.4fr_1fr] md:gap-12">
+          <div className="mt-3.5">
             <div>
               <div className="mb-1.5 font-mono text-[11.5px] tracking-[0.14em] text-ink-50">
                 <span className="text-rust">● REVIEW</span> · SKU {r.id.slice(0, 4).toUpperCase()}{' '}
@@ -148,12 +145,6 @@ export default async function ReviewPage({ params }: PageProps) {
                 </p>
               )}
             </div>
-            {r.our_rating != null && (
-              <ScorePanel
-                overall={r.our_rating}
-                dimensions={r.dimensions}
-              />
-            )}
           </div>
         </div>
       </header>
@@ -167,15 +158,12 @@ export default async function ReviewPage({ params }: PageProps) {
         stack_forefoot_mm={r.stack_forefoot_mm}
         carbon_plate={r.carbon_plate}
         rock_plate={r.rock_plate}
-        msrp_usd={r.msrp_usd}
-        best_price={buyPrice}
         discipline={r.discipline}
         released_at={r.released_at}
         tester={r.tester?.name ?? null}
         miles_tested={r.miles_tested}
         weeks_tested={r.weeks_tested}
         test_terrain={r.test_terrain}
-        dimensions={r.dimensions}
       />
 
       {/* ── Two-column main ─────────────────────────────────────── */}
@@ -239,12 +227,10 @@ export default async function ReviewPage({ params }: PageProps) {
                 · Versus the field
               </h2>
               <div className="overflow-x-auto rounded border border-rule">
-                <div className="grid grid-cols-[1.4fr_70px_70px_70px_60px] bg-sand-deep px-3.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50" style={{minWidth:'370px'}}>
+                <div className="grid grid-cols-[1.4fr_70px_70px] bg-sand-deep px-3.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-50" style={{minWidth:'300px'}}>
                   <span>model</span>
                   <span className="text-right">wt</span>
                   <span className="text-right">drop</span>
-                  <span className="text-right">$</span>
-                  <span className="text-right">score</span>
                 </div>
                 {[
                   {
@@ -254,16 +240,14 @@ export default async function ReviewPage({ params }: PageProps) {
                     image_url: r.image_url,
                     weight_g: r.weight_g,
                     drop_mm: r.drop_mm,
-                    price_usd: r.price_usd,
-                    our_rating: r.our_rating,
                     self: true,
                   },
                   ...r.related.map((x) => ({ ...x, self: false })),
                 ].map((c, i, arr) => (
                   <div
                     key={c.id}
-                    style={{minWidth:'370px'}}
-                    className={`grid grid-cols-[1.4fr_70px_70px_70px_60px] items-center px-3.5 py-2.5 font-mono text-[12.5px] ${
+                    style={{minWidth:'300px'}}
+                    className={`grid grid-cols-[1.4fr_70px_70px] items-center px-3.5 py-2.5 font-mono text-[12.5px] ${
                       i < arr.length - 1 ? 'border-b border-rule-soft' : ''
                     } ${c.self ? 'bg-rust/[0.06]' : ''}`}
                   >
@@ -273,10 +257,6 @@ export default async function ReviewPage({ params }: PageProps) {
                     </span>
                     <span className="text-right">{c.weight_g}g</span>
                     <span className="text-right">{c.drop_mm}mm</span>
-                    <span className="text-right">${c.price_usd}</span>
-                    <span className={`text-right ${c.self ? 'font-semibold text-rust' : ''}`}>
-                      {c.our_rating}
-                    </span>
                   </div>
                 ))}
               </div>
@@ -319,27 +299,15 @@ export default async function ReviewPage({ params }: PageProps) {
 
         {/* RIGHT RAIL */}
         <aside className="px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-          {r.retailer_prices.length > 0 ? (
-            <RetailerList prices={r.retailer_prices} msrp={r.msrp_usd} />
-          ) : (
-            buyPrice && (
-              <RetailerList
-                msrp={r.msrp_usd}
-                prices={[
-                  {
-                    retailer: 'amazon',
-                    price_usd: buyPrice,
-                    url: buyUrl,
-                    in_stock: true,
-                    stock_label: 'in stock',
-                    checked_at: new Date().toISOString(),
-                  },
-                ]}
-              />
-            )
-          )}
-
-          <PriceHistory points={r.price_history} currentPrice={buyPrice} />
+          {/* Buy CTA */}
+          <a
+            href={buyUrl}
+            rel="sponsored nofollow noopener"
+            target="_blank"
+            className="block w-full rounded bg-carbon px-[22px] py-5 text-center font-mono text-[14px] font-semibold tracking-[0.04em] text-sand"
+          >
+            View on Amazon →
+          </a>
 
           {/* ── vs category average ──────────────────────────────── */}
           <div className="mt-3.5 rounded border border-rule bg-paper p-[18px]">
@@ -351,14 +319,11 @@ export default async function ReviewPage({ params }: PageProps) {
                 { label: 'weight', val: r.weight_g, avg: stats.avg_weight_g, unit: 'g' },
                 { label: 'drop', val: r.drop_mm, avg: stats.avg_drop_mm, unit: 'mm' },
                 { label: 'stack', val: r.stack_heel_mm, avg: stats.avg_stack_heel_mm, unit: 'mm' },
-                { label: 'price', val: r.price_usd, avg: stats.avg_price_usd, unit: '$' },
-                { label: 'rating', val: r.our_rating, avg: stats.avg_rating, unit: '/10' },
               ]
                 .filter(({ val, avg }) => val != null && avg != null)
                 .map(({ label, val, avg, unit }) => {
                   const d = delta(val, avg);
-                  const better =
-                    (label === 'weight' || label === 'price') ? (val! < avg!) : (val! > avg!);
+                  const better = label === 'weight' ? (val! < avg!) : (val! > avg!);
                   return (
                     <div key={label} className="flex justify-between border-b border-rule-soft py-1.5">
                       <span className="text-ink-50">{label}</span>
@@ -387,7 +352,7 @@ export default async function ReviewPage({ params }: PageProps) {
                 {r.related.map((c) => (
                   <li
                     key={c.id}
-                    className="grid grid-cols-[44px_1fr_50px] items-center gap-3"
+                    className="grid grid-cols-[44px_1fr] items-center gap-3"
                   >
                     <a
                       href={`/reviews/${c.slug}`}
@@ -411,9 +376,6 @@ export default async function ReviewPage({ params }: PageProps) {
                         {c.model}
                       </div>
                     </a>
-                    <span className="text-right font-mono text-[12px] text-carbon">
-                      {c.our_rating}
-                    </span>
                   </li>
                 ))}
               </ul>
@@ -426,9 +388,6 @@ export default async function ReviewPage({ params }: PageProps) {
         brand={r.brand}
         model={r.model}
         discipline={r.discipline}
-        rating={r.our_rating}
-        price={buyPrice}
-        retailer={retailer}
         buyUrl={buyUrl}
         image={r.image_url}
       />

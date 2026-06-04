@@ -20,16 +20,6 @@ export default async function CategoryPage({ title, description, category, table
     .eq('published', true);
 
   const total = products?.length ?? 0;
-  const avgRating =
-    total > 0
-      ? (
-          products!
-            .map((p: any) => Number(p.our_rating))
-            .filter((n) => Number.isFinite(n))
-            .reduce((s, n) => s + n, 0) /
-          products!.filter((p: any) => Number.isFinite(Number(p.our_rating))).length
-        ).toFixed(2)
-      : '—';
 
   return (
     <div className="bg-sand text-carbon">
@@ -42,7 +32,6 @@ export default async function CategoryPage({ title, description, category, table
           { k: 'last sync', v: '04:12 UTC' },
           { k: 'price source', v: 'amazon · rei · running-warehouse' },
           { k: 'coverage', v: `● ${total}/${total} reviewed`, good: true },
-          { k: 'avg score', v: `${avgRating} / 10` },
         ]}
       />
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
