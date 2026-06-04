@@ -7,6 +7,8 @@ import { Metadata } from 'next';
 import CategoryHeader from '@/components/category-header';
 import ChangelogView from './changelog-view';
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: 'Changelog — RunningGearDB',
   description: 'Every score update, price change, and review revision on RunningGearDB, publicly tracked.',
