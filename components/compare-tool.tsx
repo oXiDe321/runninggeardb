@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Plus, ArrowLeftRight } from 'lucide-react';
 import { affiliateUrl, amazonSearchUrl } from '@/lib/amazon';
+import { useCurrency } from '@/lib/currency';
 
 interface Product {
   id: string;
@@ -21,34 +22,37 @@ type Category = 'shoes' | 'vests' | 'gels';
 
 const categoryLabels: Record<Category, string> = { shoes: 'Shoes', vests: 'Vests & Packs', gels: 'Nutrition' };
 
-const specsForCategory: Record<Category, { label: string; key: string; format?: (v: any) => string }[]> = {
-  shoes: [
-    { label: 'Discipline', key: 'discipline' },
-    { label: 'Drop', key: 'drop_mm', format: (v) => `${v}mm` },
-    { label: 'Weight', key: 'weight_g', format: (v) => `${v}g` },
-    { label: 'Carbon Plate', key: 'carbon_plate', format: (v) => v ? 'Yes' : 'No' },
-    { label: 'Price', key: 'price_usd', format: (v) => `$${v}` },
-  ],
-  vests: [
-    { label: 'Capacity', key: 'capacity_l', format: (v) => `${v}L` },
-    { label: 'Weight', key: 'weight_g', format: (v) => `${v}g` },
-    { label: 'UTMB Compliant', key: 'utmb_compliant', format: (v) => v ? 'Yes' : 'No' },
-    { label: 'Price', key: 'price_usd', format: (v) => `$${v}` },
-  ],
-  gels: [
-    { label: 'Format', key: 'format' },
-    { label: 'Carbs', key: 'carbs_per_serving_g', format: (v) => `${v}g` },
-    { label: 'Sodium', key: 'sodium_mg', format: (v) => v > 0 ? `${v}mg` : 'None' },
-    { label: 'Caffeine', key: 'caffeine_mg', format: (v) => v > 0 ? `${v}mg` : 'None' },
-    { label: 'Calories', key: 'calories', format: (v) => v ? `${v}` : '—' },
-    { label: 'Real Food', key: 'real_food', format: (v) => v ? 'Yes' : 'No' },
-    { label: 'Price/serving', key: 'price_per_serving', format: (v) => `$${v}` },
-  ],
-};
+function buildSpecs(fmt: (v: number | null | undefined) => string): Record<Category, { label: string; key: string; format?: (v: any) => string }[]> {
+  return {
+    shoes: [
+      { label: 'Discipline', key: 'discipline' },
+      { label: 'Drop', key: 'drop_mm', format: (v) => `${v}mm` },
+      { label: 'Weight', key: 'weight_g', format: (v) => `${v}g` },
+      { label: 'Carbon Plate', key: 'carbon_plate', format: (v) => v ? 'Yes' : 'No' },
+      { label: 'Price', key: 'price_usd', format: (v) => fmt(v) },
+    ],
+    vests: [
+      { label: 'Capacity', key: 'capacity_l', format: (v) => `${v}L` },
+      { label: 'Weight', key: 'weight_g', format: (v) => `${v}g` },
+      { label: 'UTMB Compliant', key: 'utmb_compliant', format: (v) => v ? 'Yes' : 'No' },
+      { label: 'Price', key: 'price_usd', format: (v) => fmt(v) },
+    ],
+    gels: [
+      { label: 'Format', key: 'format' },
+      { label: 'Carbs', key: 'carbs_per_serving_g', format: (v) => `${v}g` },
+      { label: 'Sodium', key: 'sodium_mg', format: (v) => v > 0 ? `${v}mg` : 'None' },
+      { label: 'Caffeine', key: 'caffeine_mg', format: (v) => v > 0 ? `${v}mg` : 'None' },
+      { label: 'Calories', key: 'calories', format: (v) => v ? `${v}` : '—' },
+      { label: 'Real Food', key: 'real_food', format: (v) => v ? 'Yes' : 'No' },
+      { label: 'Price/serving', key: 'price_per_serving', format: (v) => fmt(v) },
+    ],
+  };
+}
 
 export default function CompareTool({ initialProducts }: CompareToolProps) {
   const [category, setCategory] = useState<Category>('shoes');
   const [selected, setSelected] = useState<Product[]>([]);
+  const { fmt } = useCurrency();
 
   const products = initialProducts[category] || [];
 
@@ -61,7 +65,7 @@ export default function CompareTool({ initialProducts }: CompareToolProps) {
     });
   };
 
-  const specs = specsForCategory[category];
+  const specs = buildSpecs(fmt)[category];
 
   return (
     <div className="space-y-8">

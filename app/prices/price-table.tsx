@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import PriceSparkline from '@/components/price-sparkline';
 import type { ProductPrice, PriceHistoryPoint } from '@/lib/price-data';
+import { useCurrency } from '@/lib/currency';
 
 type Kind = 'all' | 'shoe' | 'vest' | 'gel';
 
@@ -34,6 +35,7 @@ function sparklinePoints(history: PriceHistoryPoint[]) {
 export default function PriceTable({ products }: { products: ProductPrice[] }) {
   const [kind, setKind] = useState<Kind>('all');
   const [sort, setSort] = useState<'discount' | 'price' | 'name'>('discount');
+  const { fmt } = useCurrency();
 
   const filtered = useMemo(() => {
     let out = kind === 'all' ? products : products.filter((p) => p.kind === kind);
@@ -136,16 +138,16 @@ export default function PriceTable({ products }: { products: ProductPrice[] }) {
                 </div>
               </div>
               <span className="text-right font-mono text-[13px] font-semibold">
-                {hasPrice ? `$${p.current_price}` : '—'}
+                {hasPrice ? fmt(p.current_price) : '—'}
               </span>
               <span className="text-right font-mono text-[12px] text-ink-50">
-                {p.msrp ? `$${p.msrp}` : '—'}
+                {p.msrp ? fmt(p.msrp) : '—'}
               </span>
               <span className={`text-right font-mono text-[12px] ${(p.discount_pct ?? 0) > 0 ? 'text-moss font-semibold' : 'text-ink-50'}`}>
                 {p.discount_pct ? `${p.discount_pct}% off` : '—'}
               </span>
               <span className="text-right font-mono text-[11px] text-ink-50">
-                {p.low_90d != null ? `$${p.low_90d}–$${p.high_90d}` : '—'}
+                {p.low_90d != null ? `${fmt(p.low_90d)}–${fmt(p.high_90d)}` : '—'}
               </span>
               <span className="flex justify-center">
                 <PriceSparkline points={sp} />

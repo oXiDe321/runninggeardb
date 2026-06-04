@@ -1,8 +1,10 @@
+'use client';
 // components/review/retailer-list.tsx
 // Multi-retailer live price block. Click-tracked affiliate links live here.
 
 import { affiliateUrl } from '@/lib/amazon';
 import type { RetailerPrice } from '@/lib/review-types';
+import { useCurrency } from '@/lib/currency';
 
 export default function RetailerList({
   prices,
@@ -11,6 +13,7 @@ export default function RetailerList({
   prices: RetailerPrice[];
   msrp: number | null;
 }) {
+  const { fmt } = useCurrency();
   if (!prices.length) return null;
   const best = prices[0];
   const discountPct =
@@ -29,11 +32,11 @@ export default function RetailerList({
 
       <div className="mt-1.5 flex items-baseline gap-2.5">
         <span className="font-display text-[56px] font-semibold leading-none tracking-[-0.04em]">
-          ${best.price_usd}
+          {fmt(best.price_usd)}
         </span>
         {msrp && best.price_usd < msrp && (
           <>
-            <span className="font-mono text-[13px] text-ink-30 line-through">${msrp}</span>
+            <span className="font-mono text-[13px] text-ink-30 line-through">{fmt(msrp)}</span>
             <span className="ml-auto font-mono text-[11px] text-ochre">−{discountPct}%</span>
           </>
         )}
@@ -59,7 +62,7 @@ export default function RetailerList({
               className="grid grid-cols-[1fr_auto_auto] gap-2 rounded-[3px] bg-carbon-80 px-2.5 py-[7px] font-mono text-[11.5px]"
             >
               <span className="capitalize">{p.retailer}</span>
-              <span>${p.price_usd}</span>
+              <span>{fmt(p.price_usd)}</span>
               <span className={p.stock_label?.includes('low') ? 'text-ochre' : 'text-moss'}>
                 ● {p.stock_label ?? (p.in_stock ? 'in stock' : 'out')}
               </span>
