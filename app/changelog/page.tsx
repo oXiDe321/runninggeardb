@@ -7,6 +7,8 @@ import { Metadata } from 'next';
 import CategoryHeader from '@/components/category-header';
 import ChangelogView from './changelog-view';
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: 'Changelog — RunningGearDB',
   description: 'Every score update, price change, and review revision on RunningGearDB, publicly tracked.',
@@ -20,8 +22,8 @@ async function getProductSlugMap() {
   ]);
   const map = new Map<string, string>();
   for (const r of shoes.data ?? []) map.set(`shoes:${r.id}`, `/reviews/${r.slug}`);
-  for (const r of vests.data ?? []) map.set(`vests:${r.id}`, `/reviews/${r.slug}`);
-  for (const r of gels.data ?? []) map.set(`gels:${r.id}`, `/reviews/${r.slug}`);
+  for (const r of vests.data ?? []) map.set(`vests:${r.id}`, `/vests/${r.slug}`);
+  for (const r of gels.data ?? []) map.set(`gels:${r.id}`, `/gels/${r.slug}`);
   return map;
 }
 

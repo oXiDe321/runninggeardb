@@ -1,6 +1,8 @@
 // app/vests/[slug]/page.tsx
 // Vest review page — same Specs-Engine template as shoes, adapted for vest-specific specs.
 
+export const revalidate = 300;
+
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';

@@ -1,6 +1,8 @@
 // app/gels/[slug]/page.tsx
 // Gel review page — Specs-Engine template adapted for nutrition products.
 
+export const revalidate = 300;
+
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
