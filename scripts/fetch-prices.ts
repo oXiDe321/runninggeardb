@@ -90,6 +90,17 @@ async function main() {
   const start = Date.now();
   console.log('[prices] fetching Amazon AU prices...\n');
 
+  // Build a name map for changelog summaries
+  const [shoesRes, vestsRes, gelsRes] = await Promise.all([
+    supabase.from('shoes').select('id, brand, model'),
+    supabase.from('vests').select('id, brand, model'),
+    supabase.from('gels').select('id, brand, product'),
+  ]);
+  const nameMap = new Map<string, string>();
+  for (const r of shoesRes.data ?? []) nameMap.set(`shoes:${r.id}`, `${r.brand} ${r.model}`);
+  for (const r of vestsRes.data ?? []) nameMap.set(`vests:${r.id}`, `${r.brand} ${r.model}`);
+  for (const r of gelsRes.data ?? []) nameMap.set(`gels:${r.id}`, `${r.brand} ${r.product}`);
+
   // Get all products with Amazon URLs
   const { data: products } = await supabase
     .from('retailer_prices')
@@ -165,7 +176,7 @@ async function main() {
         kind: 'price',
         product_table: row.product_table,
         product_id: row.product_id,
-        summary: `price: amazon A$${oldPrice.toFixed(0)} → A$${result.price_aud.toFixed(0)}`,
+        summary: `${nameMap.get(`${row.product_table}:${row.product_id}`) ?? 'unknown'}: amazon A$${oldPrice.toFixed(0)} → A$${result.price_aud.toFixed(0)}`,
         actor: 'cron/fetch-prices',
       });
     }
